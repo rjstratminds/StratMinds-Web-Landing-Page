@@ -1501,7 +1501,7 @@
         holdPos = toNdc(holdX, holdY);
       } else if (holdReleaseTime > 0) {
         const elapsed = (now - holdReleaseTime) / 1000;
-        const closeDuration = 0.85;
+        const closeDuration = 1.7;
         if (elapsed < closeDuration) {
           const t = 1 - (elapsed / closeDuration);
           holdStrength = holdReleaseStrength * t;
