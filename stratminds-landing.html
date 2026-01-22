@@ -1350,7 +1350,7 @@
     }
 
     function triggerHyperspaceSound() {
-      if (!audioEnabled || !audioCtx || !hyperspaceGain) return;
+      if (!audioEnabled || !warpEnabled || !audioCtx || !hyperspaceGain) return;
       const now = audioCtx.currentTime;
       const endTime = now + 2.5;
       const master = audioCtx.createGain();
