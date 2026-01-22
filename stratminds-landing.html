@@ -709,6 +709,11 @@
     let warpEngage = 0;
     let warpEngaged = false;
     let warpEngageTime = 0;
+    let whooshCtx = null;
+    let whooshGain = null;
+    let whooshBuffer = null;
+    let whooshBufferRev = null;
+    let whooshActive = false;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1237,6 +1242,51 @@
       }
     }
 
+    function isInLogoRect(x, y) {
+      if (!logoRectCss) return false;
+      return x >= logoRectCss.x && x <= logoRectCss.x + logoRectCss.w &&
+        y >= logoRectCss.y && y <= logoRectCss.y + logoRectCss.h;
+    }
+
+    function initWhoosh() {
+      if (whooshCtx) return;
+      whooshCtx = new (window.AudioContext || window.webkitAudioContext)();
+      whooshGain = whooshCtx.createGain();
+      whooshGain.gain.value = 0.7;
+      whooshGain.connect(whooshCtx.destination);
+      fetch('Alien take off whoosh.mp3')
+        .then((res) => res.arrayBuffer())
+        .then((buf) => whooshCtx.decodeAudioData(buf))
+        .then((decoded) => {
+          whooshBuffer = decoded;
+          const rev = whooshCtx.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
+          for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+            const src = decoded.getChannelData(ch);
+            const dst = rev.getChannelData(ch);
+            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) {
+              dst[i] = src[j];
+            }
+          }
+          whooshBufferRev = rev;
+        })
+        .catch(() => {});
+    }
+
+    function playWhoosh(reverse = false) {
+      if (!audioEnabled) return;
+      initWhoosh();
+      if (!whooshCtx || !whooshGain || (!whooshBuffer && !whooshBufferRev)) return;
+      if (whooshCtx.state === 'suspended') {
+        whooshCtx.resume();
+      }
+      const buffer = reverse ? whooshBufferRev : whooshBuffer;
+      if (!buffer) return;
+      const src = whooshCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(whooshGain);
+      src.start();
+    }
+
     window.addEventListener('pointermove', (e) => {
       mouseX = e.clientX / window.innerWidth;
       mouseY = 1.0 - (e.clientY / window.innerHeight);
@@ -1251,6 +1301,10 @@
       if (e.target && e.target.closest('[data-ui]')) {
         return;
       }
+      whooshActive = isInLogoRect(e.clientX, e.clientY);
+      if (whooshActive) {
+        playWhoosh(false);
+      }
       isHolding = true;
       holdStart = performance.now();
       holdX = e.clientX;
@@ -1261,6 +1315,10 @@
     window.addEventListener('pointerup', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
         return;
+      }
+      if (whooshActive) {
+        playWhoosh(true);
+        whooshActive = false;
       }
       isHolding = false;
       addRipple(e.clientX, e.clientY);
