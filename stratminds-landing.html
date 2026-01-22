@@ -1271,172 +1271,37 @@
       return t * t * (3 - 2 * t);
     }
 
-    let audioCtx = null;
-    let audioNodes = null;
     let audioEnabled = false;
-    let hyperspaceGain = null;
-
-    function initAudio() {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 8, audioCtx.sampleRate);
-      const data = noiseBuffer.getChannelData(0);
-      let last = 0;
-      for (let i = 0; i < data.length; i++) {
-        const white = Math.random() * 2 - 1;
-        last = (last + 0.01 * white) / 1.01;
-        data[i] = last * 0.7;
-      }
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = noiseBuffer;
-      noise.loop = true;
-
-      const bandpass = audioCtx.createBiquadFilter();
-      bandpass.type = 'bandpass';
-      bandpass.frequency.value = 260;
-      bandpass.Q.value = 0.7;
-
-      const lowpass = audioCtx.createBiquadFilter();
-      lowpass.type = 'lowpass';
-      lowpass.frequency.value = 2500;
-      lowpass.Q.value = 0.7;
-
-      const highpass = audioCtx.createBiquadFilter();
-      highpass.type = 'highpass';
-      highpass.frequency.value = 40;
-      highpass.Q.value = 0.6;
-
-      const waveGain = audioCtx.createGain();
-      waveGain.gain.value = 0.0;
-      const setGain = audioCtx.createGain();
-      setGain.gain.value = 1.0;
-      const masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.0036504;
-      hyperspaceGain = audioCtx.createGain();
-      hyperspaceGain.gain.value = 1.0;
-
-      const lfo = audioCtx.createOscillator();
-      const lfoGain = audioCtx.createGain();
-      lfo.type = 'sine';
-      lfo.frequency.value = 0.1;
-      lfoGain.gain.value = 0.65;
-
-      const base = audioCtx.createConstantSource();
-      base.offset.value = 0.25;
-
-      noise.connect(bandpass).connect(lowpass).connect(highpass).connect(waveGain).connect(setGain).connect(masterGain).connect(audioCtx.destination);
-      hyperspaceGain.connect(masterGain);
-      lfo.connect(lfoGain).connect(waveGain.gain);
-      base.connect(waveGain.gain);
-
-      const scheduleWaveSets = () => {
-        if (!audioCtx || !audioNodes) return;
-        const t = audioCtx.currentTime;
-        const burstLen = 2 + Math.random() * 4;
-        const wait = 3 + Math.random() * 8;
-        const current = setGain.gain.value;
-        const peak = Math.min(0.35, current + 0.08 + Math.random() * 0.12);
-        setGain.gain.cancelScheduledValues(t);
-        setGain.gain.setValueAtTime(current, t);
-        setGain.gain.linearRampToValueAtTime(peak, t + 0.6);
-        setGain.gain.linearRampToValueAtTime(current, t + burstLen);
-        audioNodes.waveTimer = window.setTimeout(scheduleWaveSets, (wait + burstLen) * 1000);
-      };
-
-      noise.start();
-      lfo.start();
-      base.start();
-      audioNodes = { noise, bandpass, lowpass, highpass, waveGain, setGain, gain: masterGain, lfo, lfoGain, base, hyperspaceGain, waveTimer: null };
-      scheduleWaveSets();
-    }
+    const bgAudio = new Audio('Background.Hyperspace - Calm and Ethereal Atmosphere.mp3');
+    const warpAudio = new Audio('Effect.Hyperspace - Fast Stutter UFO Fly By Whoosh.mp3');
+    bgAudio.loop = true;
+    bgAudio.preload = 'metadata';
+    warpAudio.preload = 'auto';
+    bgAudio.volume = 0.6;
+    warpAudio.volume = 0.6;
 
     function triggerHyperspaceSound() {
-      if (!audioEnabled || !warpEnabled || !audioCtx || !hyperspaceGain) return;
-      const now = audioCtx.currentTime;
-      const endTime = now + 2.5;
-      const master = audioCtx.createGain();
-      master.gain.value = 0.245;
-      master.connect(hyperspaceGain);
-
-      const rumbleOsc = audioCtx.createOscillator();
-      rumbleOsc.type = 'sine';
-      rumbleOsc.frequency.setValueAtTime(28, now);
-      const rumbleGain = audioCtx.createGain();
-      rumbleGain.gain.setValueAtTime(0.0, now);
-      rumbleGain.gain.linearRampToValueAtTime(0.055, now + 0.5);
-      rumbleGain.gain.linearRampToValueAtTime(0.035, now + 2.0);
-      rumbleGain.gain.linearRampToValueAtTime(0.015, endTime);
-      const rumbleSaturator = audioCtx.createWaveShaper();
-      rumbleSaturator.curve = new Float32Array([ -1, -0.6, -0.2, 0, 0.2, 0.6, 1 ]);
-      rumbleOsc.connect(rumbleGain).connect(rumbleSaturator).connect(master);
-
-
-      const riseBus = audioCtx.createGain();
-      riseBus.gain.setValueAtTime(0.0, now);
-      riseBus.gain.linearRampToValueAtTime(0.32, now + 0.6);
-      riseBus.gain.linearRampToValueAtTime(0.42, now + 1.7);
-      riseBus.gain.linearRampToValueAtTime(0.1, endTime);
-
-      const combDelay = audioCtx.createDelay();
-      combDelay.delayTime.value = 0.015;
-      const combFeedback = audioCtx.createGain();
-      combFeedback.gain.value = 0.35;
-      combDelay.connect(combFeedback).connect(combDelay);
-
-      const phaserLfo = audioCtx.createOscillator();
-      phaserLfo.type = 'sine';
-      phaserLfo.frequency.value = 0.35;
-      const phaserDepth = audioCtx.createGain();
-      phaserDepth.gain.value = 0.003;
-      phaserLfo.connect(phaserDepth).connect(combDelay.delayTime);
-
-      const synthLP = audioCtx.createBiquadFilter();
-      synthLP.type = 'lowpass';
-      synthLP.frequency.setValueAtTime(3200, now + 0.5);
-      synthLP.frequency.exponentialRampToValueAtTime(1200, now + 2.0);
-
-      const synth1 = audioCtx.createOscillator();
-      const synth2 = audioCtx.createOscillator();
-      synth1.type = 'sawtooth';
-      synth2.type = 'triangle';
-      synth1.frequency.setValueAtTime(260, now + 0.5);
-      synth2.frequency.setValueAtTime(220, now + 0.5);
-      synth1.frequency.exponentialRampToValueAtTime(3200, now + 2.0);
-      synth2.frequency.exponentialRampToValueAtTime(2800, now + 2.0);
-      synth2.detune.value = -7;
-
-      const panL = audioCtx.createStereoPanner();
-      const panR = audioCtx.createStereoPanner();
-      panL.pan.setValueAtTime(-0.35, now + 0.5);
-      panR.pan.setValueAtTime(0.35, now + 0.5);
-
-      const synthGain = audioCtx.createGain();
-      synthGain.gain.setValueAtTime(0.0, now);
-      synthGain.gain.linearRampToValueAtTime(0.22, now + 0.6);
-      synthGain.gain.linearRampToValueAtTime(0.26, now + 1.4);
-      synthGain.gain.linearRampToValueAtTime(0.06, endTime);
-
-      synth1.connect(panL).connect(combDelay);
-      synth2.connect(panR).connect(combDelay);
-      combDelay.connect(synthLP).connect(synthGain).connect(riseBus).connect(master);
-
-      rumbleOsc.start(now);
-      synth1.start(now + 0.5);
-      synth2.start(now + 0.5);
-      phaserLfo.start(now);
-
-      rumbleOsc.stop(endTime);
-      synth1.stop(endTime);
-      synth2.stop(endTime);
-      phaserLfo.stop(endTime);
+      if (!audioEnabled || !warpEnabled) return;
+      try {
+        warpAudio.currentTime = 0;
+        warpAudio.play();
+      } catch (err) {
+        // Ignore play errors from autoplay restrictions.
+      }
     }
 
     const soundToggle = document.getElementById('soundToggle');
     if (soundToggle) {
       soundToggle.textContent = 'Sound Off';
       soundToggle.addEventListener('click', () => {
-        if (!audioCtx) initAudio();
         audioEnabled = !audioEnabled;
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioEnabled) {
+          bgAudio.currentTime = 0;
+          bgAudio.play().catch(() => {});
+        } else {
+          bgAudio.pause();
+          bgAudio.currentTime = 0;
+        }
         soundToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
       });
     }
@@ -1566,13 +1431,6 @@
       gl.uniform2f(uniforms.holePos, mouseX * 2.0 - 1.0, mouseY * 2.0 - 1.0);
       gl.uniform1f(uniforms.holeRadius, holeRadius);
       gl.uniform1f(uniforms.holeProgress, holeProgress);
-
-      if (audioEnabled && audioNodes) {
-        const level = 0.438048 + 2.19024 * converge + 1.46016 * reveal;
-        audioNodes.gain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.4);
-      } else if (audioNodes) {
-        audioNodes.gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.4);
-      }
 
       const tagline = document.getElementById('tagline');
       if (tagline) {
