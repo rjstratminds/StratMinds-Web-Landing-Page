@@ -322,7 +322,7 @@
 <body>
   <canvas id="glCanvas"></canvas>
   <canvas id="warpCanvas"></canvas>
-  <button class="warp-toggle" id="warpToggle" data-ui="true">Warp Off</button>
+  <button class="warp-toggle" id="warpToggle" data-ui="true">Warp On</button>
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
   <div class="scroll-cue" id="scrollCue">Scroll</div>
   <div class="intro" id="intro">
@@ -698,10 +698,11 @@
     let logoMaskW = 0;
     let logoMaskH = 0;
     let warpMaskPoints = [];
-    let warpEnabled = false;
+    let warpEnabled = true;
     let warpStars = [];
     let warpCenter = { x: 0, y: 0 };
     let warpIntensity = 0;
+    let warpScroll = 0;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -958,10 +959,10 @@
           if (contact && spacer) {
             const tagRect = tagline.getBoundingClientRect();
             spacer.style.top = `${Math.round(tagRect.bottom)}px`;
-            contact.style.top = `${Math.round(tagRect.bottom + 68)}px`;
+            const gap = 88;
+            contact.style.top = `${Math.round(tagRect.bottom + gap)}px`;
             if (introCue) {
               const contactRect = contact.getBoundingClientRect();
-              const gap = 88;
               const triangleHeight = 10;
               const baseTop = contactRect.bottom + gap;
               const minTop = window.innerHeight * 0.86;
@@ -1062,6 +1063,7 @@
 
     const warpToggle = document.getElementById('warpToggle');
     if (warpToggle) {
+      warpToggle.textContent = warpEnabled ? 'Warp On' : 'Warp Off';
       warpToggle.addEventListener('click', () => {
         warpEnabled = !warpEnabled;
         warpToggle.textContent = warpEnabled ? 'Warp On' : 'Warp Off';
@@ -1161,7 +1163,8 @@
         p.y += p.dirY * speed * dt;
         const trail = Math.min(320, Math.max(6, speed * 0.085));
         const thickness = Math.min(2.4, 0.6 + speed * 0.01);
-        const brightness = Math.min(0.95, p.alpha * (0.55 + 0.6 * warpIntensity));
+        const warpFade = Math.max(0.05, 1 - warpScroll);
+        const brightness = Math.min(0.95, p.alpha * (0.55 + 0.6 * warpIntensity) * warpFade);
         const r = Math.floor(225 + 20 * p.tint);
         const g = Math.floor(240 + 12 * p.tint);
         const b = 255;
@@ -1406,6 +1409,7 @@
       const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
       const scrollRaw = Math.min(1, Math.max(0, window.scrollY / scrollMax));
       const scroll = Math.min(1, scrollRaw / 0.35);
+      warpScroll = scroll;
 
       mouseStrength = Math.max(0.0, mouseStrength - 0.04);
 
