@@ -1164,16 +1164,16 @@
       for (const p of warpStars) {
         p.age += dt;
         const starSpeed = p.v0 * (0.12 + 0.25 * warpIntensity);
-        const hyperSpeed = p.v0 * Math.exp(1.7 * (p.age + mode * 0.45));
+        const hyperSpeed = p.v0 * Math.exp(1.7 * (p.age + mode * 0.45)) * (1 + mode * 1.6);
         const speed = starSpeed * (1 - mode) + hyperSpeed * mode;
         p.x += p.dirX * speed * dt;
         p.y += p.dirY * speed * dt;
         const distN = Math.min(1, Math.hypot(p.x - warpCenter.x, p.y - warpCenter.y) / maxDim);
         const trailBase = 2 + speed * 0.06;
-        const trail = Math.min(380, trailBase * (1 + mode * 6.5) * (0.35 + distN));
+        const trail = Math.min(maxDim * 1.2, trailBase * (1 + mode * 9.0) * (0.45 + distN));
         const thickness = Math.min(2.6, 0.45 + speed * 0.008 + mode * 0.7);
         const warpFade = Math.max(0.05, 1 - warpScroll);
-        const brightness = Math.min(0.98, p.alpha * (0.45 + 0.75 * warpIntensity + 0.8 * mode) * warpFade);
+        const brightness = Math.min(0.98, p.alpha * (0.55 + 0.85 * warpIntensity + 1.0 * mode) * warpFade);
         const r = Math.floor(225 + 20 * p.tint);
         const g = Math.floor(240 + 12 * p.tint);
         const b = 255;
@@ -1351,15 +1351,15 @@
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.45);
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(1400, now + 0.6);
       gain.gain.setValueAtTime(0.0, now);
-      gain.gain.linearRampToValueAtTime(0.08, now + 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+      gain.gain.linearRampToValueAtTime(0.22, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
       osc.connect(gain);
       gain.connect(hyperspaceGain);
       osc.start(now);
-      osc.stop(now + 0.75);
+      osc.stop(now + 0.95);
     }
 
     const soundToggle = document.getElementById('soundToggle');
