@@ -703,6 +703,7 @@
     let warpCenter = { x: 0, y: 0 };
     let warpIntensity = 0;
     let warpScroll = 0;
+    let warpEngage = 0;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1156,15 +1157,21 @@
       }
       warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
       warpCtx.globalCompositeOperation = 'lighter';
+      const mode = smoothstep(0.2, 0.85, warpEngage);
+      const maxDim = Math.max(warpCanvas.width, warpCanvas.height);
       for (const p of warpStars) {
         p.age += dt;
-        const speed = p.v0 * Math.exp(1.7 * p.age);
+        const starSpeed = p.v0 * (0.12 + 0.25 * warpIntensity);
+        const hyperSpeed = p.v0 * Math.exp(1.7 * (p.age + mode * 0.45));
+        const speed = starSpeed * (1 - mode) + hyperSpeed * mode;
         p.x += p.dirX * speed * dt;
         p.y += p.dirY * speed * dt;
-        const trail = Math.min(320, Math.max(6, speed * 0.085));
-        const thickness = Math.min(2.4, 0.6 + speed * 0.01);
+        const distN = Math.min(1, Math.hypot(p.x - warpCenter.x, p.y - warpCenter.y) / maxDim);
+        const trailBase = 2 + speed * 0.06;
+        const trail = Math.min(380, trailBase * (1 + mode * 6.5) * (0.35 + distN));
+        const thickness = Math.min(2.6, 0.45 + speed * 0.008 + mode * 0.7);
         const warpFade = Math.max(0.05, 1 - warpScroll);
-        const brightness = Math.min(0.95, p.alpha * (0.55 + 0.6 * warpIntensity) * warpFade);
+        const brightness = Math.min(0.98, p.alpha * (0.45 + 0.75 * warpIntensity + 0.8 * mode) * warpFade);
         const r = Math.floor(225 + 20 * p.tint);
         const g = Math.floor(240 + 12 * p.tint);
         const b = 255;
@@ -1198,8 +1205,14 @@
 
         warpCtx.globalAlpha = 1;
         warpCtx.beginPath();
-        warpCtx.moveTo(p.x - p.dirX * trail, p.y - p.dirY * trail);
-        warpCtx.lineTo(p.x, p.y);
+        if (mode < 0.15) {
+          const dot = 1.2 + distN * 1.6;
+          warpCtx.moveTo(p.x, p.y);
+          warpCtx.lineTo(p.x + p.dirX * dot, p.y + p.dirY * dot);
+        } else {
+          warpCtx.moveTo(p.x - p.dirX * trail, p.y - p.dirY * trail);
+          warpCtx.lineTo(p.x, p.y);
+        }
         warpCtx.stroke();
       }
       warpCtx.globalCompositeOperation = 'source-over';
@@ -1491,6 +1504,16 @@
         if (mainEl) {
           mainEl.style.paddingTop = `${Math.round(cueTop + triangleHeight + gap)}px`;
         }
+      }
+      if (introCue) {
+        const cueRect = introCue.getBoundingClientRect();
+        const cueCenter = cueRect.top + cueRect.height * 0.5;
+        const centerY = window.innerHeight * 0.5;
+        const range = window.innerHeight * 0.25;
+        const dist = Math.min(1, Math.abs(cueCenter - centerY) / range);
+        warpEngage = 1 - dist;
+      } else {
+        warpEngage = 0;
       }
       const scrollCue = document.getElementById('scrollCue');
       if (scrollCue) {
