@@ -716,6 +716,7 @@
     let whooshActive = false;
     let whooshPendingDown = false;
     let whooshPendingUp = false;
+    let whooshLoading = false;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1256,30 +1257,54 @@
       whooshGain = whooshCtx.createGain();
       whooshGain.gain.value = 1.0;
       whooshGain.connect(whooshCtx.destination);
-      fetch('Alien take off whoosh.mp3')
+      loadWhooshBuffer();
+    }
+
+    function loadWhooshBuffer() {
+      if (whooshBuffer || whooshLoading || !whooshCtx) return;
+      whooshLoading = true;
+      const url = 'Alien take off whoosh.mp3';
+      const decode = (buf) => whooshCtx.decodeAudioData(buf).then((decoded) => {
+        whooshBuffer = decoded;
+        const rev = whooshCtx.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
+        for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+          const src = decoded.getChannelData(ch);
+          const dst = rev.getChannelData(ch);
+          for (let i = 0, j = src.length - 1; i < src.length; i++, j--) {
+            dst[i] = src[j];
+          }
+        }
+        whooshBufferRev = rev;
+        whooshLoading = false;
+        if (whooshPendingDown) {
+          whooshPendingDown = false;
+          playWhoosh(false);
+        }
+        if (whooshPendingUp) {
+          whooshPendingUp = false;
+          playWhoosh(true);
+        }
+      });
+
+      fetch(url)
         .then((res) => res.arrayBuffer())
-        .then((buf) => whooshCtx.decodeAudioData(buf))
-        .then((decoded) => {
-          whooshBuffer = decoded;
-          const rev = whooshCtx.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
-          for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
-            const src = decoded.getChannelData(ch);
-            const dst = rev.getChannelData(ch);
-            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) {
-              dst[i] = src[j];
+        .then((buf) => decode(buf))
+        .catch(() => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', url, true);
+          xhr.responseType = 'arraybuffer';
+          xhr.onload = () => {
+            if (xhr.response) {
+              decode(xhr.response);
+            } else {
+              whooshLoading = false;
             }
-          }
-          whooshBufferRev = rev;
-          if (whooshPendingDown) {
-            whooshPendingDown = false;
-            playWhoosh(false);
-          }
-          if (whooshPendingUp) {
-            whooshPendingUp = false;
-            playWhoosh(true);
-          }
-        })
-        .catch(() => {});
+          };
+          xhr.onerror = () => {
+            whooshLoading = false;
+          };
+          xhr.send();
+        });
     }
 
     function playWhoosh(reverse = false) {
