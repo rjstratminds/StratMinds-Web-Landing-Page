@@ -82,10 +82,10 @@
       transform: translateY(0);
     }
     .section h2 {
-      font-size: clamp(18px, 2.4vw, 30px);
-      letter-spacing: 0.04em;
+      font-size: clamp(22px, 3.1vw, 40px);
+      letter-spacing: 0.03em;
       text-transform: uppercase;
-      margin-bottom: 1vh;
+      margin-bottom: 2vh;
       color: var(--ink);
     }
     .section p {
@@ -198,6 +198,22 @@
       cursor: pointer;
       pointer-events: auto;
     }
+    .motion-toggle {
+      position: fixed;
+      left: 4vw;
+      top: 9vh;
+      z-index: 3;
+      font-family: Avenir, "Avenir Next", "Avenir Next LT Pro", "Segoe UI", Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--soft);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 12px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
     .contact {
       position: absolute;
       left: 50%;
@@ -251,7 +267,7 @@
       height: 0;
       border-left: 7px solid transparent;
       border-right: 7px solid transparent;
-      border-top: 10px solid #ffd54a;
+      border-top: 10px solid #3be28c;
       z-index: 3;
       pointer-events: none;
     }
@@ -306,6 +322,9 @@
       border-top: 10px solid #3be28c;
       opacity: 0.85;
     }
+    .metric--primary {
+      transform: scale(1.08);
+    }
     @keyframes breathe {
       0%, 100% { opacity: 0.3; transform: translateY(0); }
       50% { opacity: 0.9; transform: translateY(-6px); }
@@ -323,6 +342,7 @@
   <canvas id="glCanvas"></canvas>
   <canvas id="warpCanvas"></canvas>
   <button class="warp-toggle" id="warpToggle" data-ui="true">Warp On</button>
+  <button class="motion-toggle" id="motionToggle" data-ui="true">LP Mode Off</button>
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
   <div class="scroll-cue" id="scrollCue">Scroll</div>
   <div class="intro" id="intro">
@@ -347,7 +367,7 @@
         <p class="full-text">We were built for Applied AI years before it became consensus. Our operator partners shaped billion-user products at WhatsApp, Google, Roblox, IBM, and Shopify, giving founders peer-level support across UX, infrastructure, and GTM.</p>
         <div class="metrics">
           <div class="metric"><span>Signals</span><h3>As many as 1,000+/day</h3><p class="metric-body">Live research inputs powering proprietary trend mapping.</p></div>
-          <div class="metric"><span>Operator DNA</span><h3>2B+ Users</h3><p class="metric-body">Products built and scaled by our partner team.</p></div>
+          <div class="metric metric--primary"><span>Operator DNA</span><h3>2B+ Users</h3><p class="metric-body">Products built and scaled by our partner team.</p></div>
           <div class="metric"><span>Geo Edge</span><h3>San Francisco</h3><p class="metric-body">Embedded in the epicenter of AI capital and founders.</p></div>
         </div>
       </section>
@@ -706,6 +726,8 @@
     let warpEngage = 0;
     let warpEngaged = false;
     let warpEngageTime = 0;
+    let reducedMotion = false;
+    let frozenTime = 0;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1151,7 +1173,7 @@
 
     function updateWarp(dt) {
       if (!logoRectCss || warpStars.length === 0) return;
-      const target = warpEnabled ? 1 : 0;
+      const target = reducedMotion ? (warpEngage > 0 ? 1 : 0) : (warpEnabled ? 1 : 0);
       warpIntensity += (target - warpIntensity) * Math.min(1, dt * 4.0);
       if (warpIntensity < 0.02) {
         warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
@@ -1236,7 +1258,9 @@
     window.addEventListener('pointermove', (e) => {
       mouseX = e.clientX / window.innerWidth;
       mouseY = 1.0 - (e.clientY / window.innerHeight);
-      mouseStrength = 1.0;
+      if (!reducedMotion) {
+        mouseStrength = 1.0;
+      }
       if (isHolding) {
         holdX = e.clientX;
         holdY = e.clientY;
@@ -1245,6 +1269,9 @@
 
     window.addEventListener('pointerdown', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
+        return;
+      }
+      if (reducedMotion) {
         return;
       }
       isHolding = true;
@@ -1256,6 +1283,9 @@
 
     window.addEventListener('pointerup', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
+        return;
+      }
+      if (reducedMotion) {
         return;
       }
       isHolding = false;
@@ -1373,6 +1403,18 @@
       });
     }
 
+    const motionToggle = document.getElementById('motionToggle');
+    if (motionToggle) {
+      motionToggle.textContent = 'LP Mode Off';
+      motionToggle.addEventListener('click', () => {
+        reducedMotion = !reducedMotion;
+        motionToggle.textContent = reducedMotion ? 'LP Mode On' : 'LP Mode Off';
+        if (!reducedMotion) {
+          frozenTime = 0;
+        }
+      });
+    }
+
     gl.clearColor(0, 0, 0, 1);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -1424,7 +1466,7 @@
 
     function render() {
       const now = performance.now();
-      const t = (now - startTime) / 1000;
+      let t = (now - startTime) / 1000;
       const dt = (now - lastTime) / 1000;
       lastTime = now;
 
@@ -1440,6 +1482,12 @@
       }
 
       const postStart = chaosDuration + convergeDuration + lockDuration;
+      if (reducedMotion && lock >= 1) {
+        if (frozenTime === 0) {
+          frozenTime = t;
+        }
+        t = frozenTime;
+      }
 
       const scan = Math.sin(t * 0.2) * 0.9;
       const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
@@ -1448,10 +1496,16 @@
       warpScroll = scroll;
 
       mouseStrength = Math.max(0.0, mouseStrength - 0.04);
+      if (scrollRaw > 0.05 && !isHolding) {
+        mouseStrength = 0.0;
+      }
+      if (reducedMotion) {
+        mouseStrength = 0.0;
+      }
 
       let holdStrength = 0.0;
       let holdPos = { x: 0.0, y: 0.0 };
-      if (isHolding) {
+      if (isHolding && !reducedMotion) {
         holdStrength = Math.min(1.0, (now - holdStart) / 900);
         holdPos = toNdc(holdX, holdY);
       }
@@ -1490,8 +1544,8 @@
       gl.uniform1f(uniforms.holdStrength, holdStrength);
       gl.uniform2fv(uniforms.ripples, ripplePositions);
       gl.uniform1fv(uniforms.rippleAges, rippleAges);
-      const holeRadius = isHolding ? (0.12 + holdStrength * 0.28) : 0.0;
-      const holeProgress = isHolding ? Math.min(1, (now - holdStart) / 1000) : 0.0;
+      const holeRadius = (isHolding && !reducedMotion) ? (0.12 + holdStrength * 0.28) : 0.0;
+      const holeProgress = (isHolding && !reducedMotion) ? Math.min(1, (now - holdStart) / 1000) : 0.0;
       gl.uniform2f(uniforms.holePos, mouseX * 2.0 - 1.0, mouseY * 2.0 - 1.0);
       gl.uniform1f(uniforms.holeRadius, holeRadius);
       gl.uniform1f(uniforms.holeProgress, holeProgress);
