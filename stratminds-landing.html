@@ -1254,7 +1254,7 @@
       if (whooshCtx) return;
       whooshCtx = new (window.AudioContext || window.webkitAudioContext)();
       whooshGain = whooshCtx.createGain();
-      whooshGain.gain.value = 0.7;
+      whooshGain.gain.value = 1.0;
       whooshGain.connect(whooshCtx.destination);
       fetch('Alien take off whoosh.mp3')
         .then((res) => res.arrayBuffer())
