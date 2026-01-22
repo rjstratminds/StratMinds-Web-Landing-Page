@@ -725,6 +725,8 @@
     let holdStart = 0;
     let holdX = 0.0;
     let holdY = 0.0;
+    let holdReleaseTime = 0;
+    let holdReleaseStrength = 0;
     const MAX_RIPPLES = 8;
     const rippleLife = 2.0;
     const ripples = [];
@@ -1343,6 +1345,7 @@
       if (e.target && e.target.closest('[data-ui]')) {
         return;
       }
+      holdReleaseTime = 0;
       whooshActive = isInLogoRect(e.clientX, e.clientY);
       if (whooshActive) {
         playWhoosh(false);
@@ -1362,6 +1365,8 @@
         playWhoosh(true);
         whooshActive = false;
       }
+      holdReleaseTime = performance.now();
+      holdReleaseStrength = Math.min(1.0, (holdReleaseTime - holdStart) / 900);
       isHolding = false;
       addRipple(e.clientX, e.clientY);
     }, { passive: true });
@@ -1494,6 +1499,16 @@
       if (isHolding) {
         holdStrength = Math.min(1.0, (now - holdStart) / 900);
         holdPos = toNdc(holdX, holdY);
+      } else if (holdReleaseTime > 0) {
+        const elapsed = (now - holdReleaseTime) / 1000;
+        const closeDuration = 0.85;
+        if (elapsed < closeDuration) {
+          const t = 1 - (elapsed / closeDuration);
+          holdStrength = holdReleaseStrength * t;
+          holdPos = toNdc(holdX, holdY);
+        } else {
+          holdReleaseTime = 0;
+        }
       }
 
       for (let i = ripples.length - 1; i >= 0; i--) {
@@ -1530,8 +1545,8 @@
       gl.uniform1f(uniforms.holdStrength, holdStrength);
       gl.uniform2fv(uniforms.ripples, ripplePositions);
       gl.uniform1fv(uniforms.rippleAges, rippleAges);
-      const holeRadius = isHolding ? (0.12 + holdStrength * 0.28) : 0.0;
-      const holeProgress = isHolding ? Math.min(1, (now - holdStart) / 1000) : 0.0;
+      const holeRadius = holdStrength > 0 ? (0.12 + holdStrength * 0.28) : 0.0;
+      const holeProgress = holdStrength > 0 ? Math.min(1, holdStrength) : 0.0;
       gl.uniform2f(uniforms.holePos, mouseX * 2.0 - 1.0, mouseY * 2.0 - 1.0);
       gl.uniform1f(uniforms.holeRadius, holeRadius);
       gl.uniform1f(uniforms.holeProgress, holeProgress);
