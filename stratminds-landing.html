@@ -198,22 +198,6 @@
       cursor: pointer;
       pointer-events: auto;
     }
-    .motion-toggle {
-      position: fixed;
-      left: 4vw;
-      top: 9vh;
-      z-index: 3;
-      font-family: Avenir, "Avenir Next", "Avenir Next LT Pro", "Segoe UI", Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--soft);
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 8px 12px;
-      cursor: pointer;
-      pointer-events: auto;
-    }
     .contact {
       position: absolute;
       left: 50%;
@@ -342,7 +326,6 @@
   <canvas id="glCanvas"></canvas>
   <canvas id="warpCanvas"></canvas>
   <button class="warp-toggle" id="warpToggle" data-ui="true">Warp On</button>
-  <button class="motion-toggle" id="motionToggle" data-ui="true">LP Mode Off</button>
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
   <div class="scroll-cue" id="scrollCue">Scroll</div>
   <div class="intro" id="intro">
@@ -726,8 +709,6 @@
     let warpEngage = 0;
     let warpEngaged = false;
     let warpEngageTime = 0;
-    let reducedMotion = false;
-    let frozenTime = 0;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1143,7 +1124,8 @@
         x: logoRectCss.x + logoRectCss.w * 0.5,
         y: logoRectCss.y + logoRectCss.h * 0.5
       };
-      const targetCount = Math.min(1600, Math.max(420, Math.floor((logoRectCss.w * logoRectCss.h) / 2200)));
+      const baseCount = Math.min(1600, Math.max(420, Math.floor((logoRectCss.w * logoRectCss.h) / 2200)));
+      const targetCount = Math.max(200, Math.floor(baseCount * 0.7));
       warpStars = [];
       for (let i = 0; i < targetCount; i++) {
         const p = pickWarpPoint();
@@ -1173,7 +1155,7 @@
 
     function updateWarp(dt) {
       if (!logoRectCss || warpStars.length === 0) return;
-      const target = reducedMotion ? (warpEngage > 0 ? 1 : 0) : (warpEnabled ? 1 : 0);
+      const target = warpEnabled ? 1 : 0;
       warpIntensity += (target - warpIntensity) * Math.min(1, dt * 4.0);
       if (warpIntensity < 0.02) {
         warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
@@ -1258,9 +1240,7 @@
     window.addEventListener('pointermove', (e) => {
       mouseX = e.clientX / window.innerWidth;
       mouseY = 1.0 - (e.clientY / window.innerHeight);
-      if (!reducedMotion) {
-        mouseStrength = 1.0;
-      }
+      mouseStrength = 1.0;
       if (isHolding) {
         holdX = e.clientX;
         holdY = e.clientY;
@@ -1269,9 +1249,6 @@
 
     window.addEventListener('pointerdown', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
-        return;
-      }
-      if (reducedMotion) {
         return;
       }
       isHolding = true;
@@ -1283,9 +1260,6 @@
 
     window.addEventListener('pointerup', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
-        return;
-      }
-      if (reducedMotion) {
         return;
       }
       isHolding = false;
@@ -1413,7 +1387,8 @@
       noiseBand.Q.value = 0.8;
       const noiseGain = audioCtx.createGain();
       noiseGain.gain.setValueAtTime(0.0, now);
-      noiseGain.gain.linearRampToValueAtTime(0.11, now + 0.5);
+      noiseGain.gain.linearRampToValueAtTime(0.0, now + 0.5);
+      noiseGain.gain.linearRampToValueAtTime(0.11, now + 0.7);
       noiseGain.gain.linearRampToValueAtTime(0.18, now + 1.6);
       noiseGain.gain.linearRampToValueAtTime(0.05, endTime);
       noise.connect(noiseBand).connect(noiseGain).connect(master);
@@ -1491,7 +1466,7 @@
       shimmerNoise.connect(shimmerHP).connect(shimmerGain).connect(master);
 
       rumbleOsc.start(now);
-      noise.start(now);
+      noise.start(now + 0.5);
       transientNoise.start(now);
       shimmerNoise.start(now);
       synth1.start(now + 0.5);
@@ -1515,18 +1490,6 @@
         audioEnabled = !audioEnabled;
         if (audioCtx.state === 'suspended') audioCtx.resume();
         soundToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
-      });
-    }
-
-    const motionToggle = document.getElementById('motionToggle');
-    if (motionToggle) {
-      motionToggle.textContent = 'LP Mode Off';
-      motionToggle.addEventListener('click', () => {
-        reducedMotion = !reducedMotion;
-        motionToggle.textContent = reducedMotion ? 'LP Mode On' : 'LP Mode Off';
-        if (!reducedMotion) {
-          frozenTime = 0;
-        }
       });
     }
 
@@ -1581,7 +1544,7 @@
 
     function render() {
       const now = performance.now();
-      let t = (now - startTime) / 1000;
+      const t = (now - startTime) / 1000;
       const dt = (now - lastTime) / 1000;
       lastTime = now;
 
@@ -1597,12 +1560,6 @@
       }
 
       const postStart = chaosDuration + convergeDuration + lockDuration;
-      if (reducedMotion && lock >= 1) {
-        if (frozenTime === 0) {
-          frozenTime = t;
-        }
-        t = frozenTime;
-      }
 
       const scan = Math.sin(t * 0.2) * 0.9;
       const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
@@ -1614,13 +1571,10 @@
       if (scrollRaw > 0.05 && !isHolding) {
         mouseStrength = 0.0;
       }
-      if (reducedMotion) {
-        mouseStrength = 0.0;
-      }
 
       let holdStrength = 0.0;
       let holdPos = { x: 0.0, y: 0.0 };
-      if (isHolding && !reducedMotion) {
+      if (isHolding) {
         holdStrength = Math.min(1.0, (now - holdStart) / 900);
         holdPos = toNdc(holdX, holdY);
       }
@@ -1659,8 +1613,8 @@
       gl.uniform1f(uniforms.holdStrength, holdStrength);
       gl.uniform2fv(uniforms.ripples, ripplePositions);
       gl.uniform1fv(uniforms.rippleAges, rippleAges);
-      const holeRadius = (isHolding && !reducedMotion) ? (0.12 + holdStrength * 0.28) : 0.0;
-      const holeProgress = (isHolding && !reducedMotion) ? Math.min(1, (now - holdStart) / 1000) : 0.0;
+      const holeRadius = isHolding ? (0.12 + holdStrength * 0.28) : 0.0;
+      const holeProgress = isHolding ? Math.min(1, (now - holdStart) / 1000) : 0.0;
       gl.uniform2f(uniforms.holePos, mouseX * 2.0 - 1.0, mouseY * 2.0 - 1.0);
       gl.uniform1f(uniforms.holeRadius, holeRadius);
       gl.uniform1f(uniforms.holeProgress, holeProgress);
