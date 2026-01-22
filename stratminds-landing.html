@@ -1378,18 +1378,133 @@
     function triggerHyperspaceSound() {
       if (!audioEnabled || !audioCtx || !hyperspaceGain) return;
       const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(1400, now + 0.6);
-      gain.gain.setValueAtTime(0.0, now);
-      gain.gain.linearRampToValueAtTime(0.22, now + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
-      osc.connect(gain);
-      gain.connect(hyperspaceGain);
-      osc.start(now);
-      osc.stop(now + 0.95);
+      const endTime = now + 2.5;
+      const master = audioCtx.createGain();
+      master.gain.value = 0.7;
+      master.connect(hyperspaceGain);
+
+      const makeNoiseBuffer = (seconds) => {
+        const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * seconds, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+      };
+
+      const rumbleOsc = audioCtx.createOscillator();
+      rumbleOsc.type = 'sine';
+      rumbleOsc.frequency.setValueAtTime(28, now);
+      const rumbleGain = audioCtx.createGain();
+      rumbleGain.gain.setValueAtTime(0.0, now);
+      rumbleGain.gain.linearRampToValueAtTime(0.055, now + 0.5);
+      rumbleGain.gain.linearRampToValueAtTime(0.035, now + 2.0);
+      rumbleGain.gain.linearRampToValueAtTime(0.015, endTime);
+      const rumbleSaturator = audioCtx.createWaveShaper();
+      rumbleSaturator.curve = new Float32Array([ -1, -0.6, -0.2, 0, 0.2, 0.6, 1 ]);
+      rumbleOsc.connect(rumbleGain).connect(rumbleSaturator).connect(master);
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = makeNoiseBuffer(2.6);
+      const noiseBand = audioCtx.createBiquadFilter();
+      noiseBand.type = 'bandpass';
+      noiseBand.frequency.setValueAtTime(320, now);
+      noiseBand.frequency.exponentialRampToValueAtTime(2400, now + 2.0);
+      noiseBand.Q.value = 0.8;
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.0, now);
+      noiseGain.gain.linearRampToValueAtTime(0.11, now + 0.5);
+      noiseGain.gain.linearRampToValueAtTime(0.18, now + 1.6);
+      noiseGain.gain.linearRampToValueAtTime(0.05, endTime);
+      noise.connect(noiseBand).connect(noiseGain).connect(master);
+
+      const transientNoise = audioCtx.createBufferSource();
+      transientNoise.buffer = makeNoiseBuffer(0.6);
+      const transientHP = audioCtx.createBiquadFilter();
+      transientHP.type = 'highpass';
+      transientHP.frequency.value = 2200;
+      const transientGain = audioCtx.createGain();
+      transientGain.gain.setValueAtTime(0.0001, now);
+      transientGain.gain.linearRampToValueAtTime(0.22, now + 0.5);
+      transientGain.gain.exponentialRampToValueAtTime(0.001, now + 0.62);
+      transientNoise.connect(transientHP).connect(transientGain).connect(master);
+
+      const riseBus = audioCtx.createGain();
+      riseBus.gain.setValueAtTime(0.0, now);
+      riseBus.gain.linearRampToValueAtTime(0.32, now + 0.6);
+      riseBus.gain.linearRampToValueAtTime(0.42, now + 1.7);
+      riseBus.gain.linearRampToValueAtTime(0.1, endTime);
+
+      const combDelay = audioCtx.createDelay();
+      combDelay.delayTime.value = 0.015;
+      const combFeedback = audioCtx.createGain();
+      combFeedback.gain.value = 0.35;
+      combDelay.connect(combFeedback).connect(combDelay);
+
+      const phaserLfo = audioCtx.createOscillator();
+      phaserLfo.type = 'sine';
+      phaserLfo.frequency.value = 0.35;
+      const phaserDepth = audioCtx.createGain();
+      phaserDepth.gain.value = 0.003;
+      phaserLfo.connect(phaserDepth).connect(combDelay.delayTime);
+
+      const synthLP = audioCtx.createBiquadFilter();
+      synthLP.type = 'lowpass';
+      synthLP.frequency.setValueAtTime(3200, now + 0.5);
+      synthLP.frequency.exponentialRampToValueAtTime(1200, now + 2.0);
+
+      const synth1 = audioCtx.createOscillator();
+      const synth2 = audioCtx.createOscillator();
+      synth1.type = 'sawtooth';
+      synth2.type = 'triangle';
+      synth1.frequency.setValueAtTime(260, now + 0.5);
+      synth2.frequency.setValueAtTime(220, now + 0.5);
+      synth1.frequency.exponentialRampToValueAtTime(3200, now + 2.0);
+      synth2.frequency.exponentialRampToValueAtTime(2800, now + 2.0);
+      synth2.detune.value = -7;
+
+      const panL = audioCtx.createStereoPanner();
+      const panR = audioCtx.createStereoPanner();
+      panL.pan.setValueAtTime(-0.35, now + 0.5);
+      panR.pan.setValueAtTime(0.35, now + 0.5);
+
+      const synthGain = audioCtx.createGain();
+      synthGain.gain.setValueAtTime(0.0, now);
+      synthGain.gain.linearRampToValueAtTime(0.22, now + 0.6);
+      synthGain.gain.linearRampToValueAtTime(0.26, now + 1.4);
+      synthGain.gain.linearRampToValueAtTime(0.06, endTime);
+
+      synth1.connect(panL).connect(combDelay);
+      synth2.connect(panR).connect(combDelay);
+      combDelay.connect(synthLP).connect(synthGain).connect(riseBus).connect(master);
+
+      const shimmerNoise = audioCtx.createBufferSource();
+      shimmerNoise.buffer = makeNoiseBuffer(1.0);
+      const shimmerHP = audioCtx.createBiquadFilter();
+      shimmerHP.type = 'highpass';
+      shimmerHP.frequency.setValueAtTime(1200, now + 1.8);
+      shimmerHP.frequency.exponentialRampToValueAtTime(6000, now + 2.2);
+      const shimmerGain = audioCtx.createGain();
+      shimmerGain.gain.setValueAtTime(0.0, now + 1.8);
+      shimmerGain.gain.linearRampToValueAtTime(0.12, now + 2.1);
+      shimmerGain.gain.linearRampToValueAtTime(0.02, endTime);
+      shimmerNoise.connect(shimmerHP).connect(shimmerGain).connect(master);
+
+      rumbleOsc.start(now);
+      noise.start(now);
+      transientNoise.start(now);
+      shimmerNoise.start(now);
+      synth1.start(now + 0.5);
+      synth2.start(now + 0.5);
+      phaserLfo.start(now);
+
+      rumbleOsc.stop(endTime);
+      noise.stop(endTime);
+      transientNoise.stop(now + 0.8);
+      shimmerNoise.stop(endTime);
+      synth1.stop(endTime);
+      synth2.stop(endTime);
+      phaserLfo.stop(endTime);
     }
 
     const soundToggle = document.getElementById('soundToggle');
