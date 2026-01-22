@@ -704,6 +704,8 @@
     let warpIntensity = 0;
     let warpScroll = 0;
     let warpEngage = 0;
+    let warpEngaged = false;
+    let warpEngageTime = 0;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1268,6 +1270,7 @@
     let audioCtx = null;
     let audioNodes = null;
     let audioEnabled = false;
+    let hyperspaceGain = null;
 
     function initAudio() {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1304,6 +1307,8 @@
       setGain.gain.value = 1.0;
       const masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.0036504;
+      hyperspaceGain = audioCtx.createGain();
+      hyperspaceGain.gain.value = 0.0;
 
       const lfo = audioCtx.createOscillator();
       const lfoGain = audioCtx.createGain();
@@ -1315,6 +1320,7 @@
       base.offset.value = 0.25;
 
       noise.connect(bandpass).connect(lowpass).connect(highpass).connect(waveGain).connect(setGain).connect(masterGain).connect(audioCtx.destination);
+      hyperspaceGain.connect(masterGain);
       lfo.connect(lfoGain).connect(waveGain.gain);
       base.connect(waveGain.gain);
 
@@ -1335,8 +1341,25 @@
       noise.start();
       lfo.start();
       base.start();
-      audioNodes = { noise, bandpass, lowpass, highpass, waveGain, setGain, gain: masterGain, lfo, lfoGain, base, waveTimer: null };
+      audioNodes = { noise, bandpass, lowpass, highpass, waveGain, setGain, gain: masterGain, lfo, lfoGain, base, hyperspaceGain, waveTimer: null };
       scheduleWaveSets();
+    }
+
+    function triggerHyperspaceSound() {
+      if (!audioEnabled || !audioCtx || !hyperspaceGain) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.45);
+      gain.gain.setValueAtTime(0.0, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+      osc.connect(gain);
+      gain.connect(hyperspaceGain);
+      osc.start(now);
+      osc.stop(now + 0.75);
     }
 
     const soundToggle = document.getElementById('soundToggle');
@@ -1509,9 +1532,21 @@
         const cueRect = introCue.getBoundingClientRect();
         const cueCenter = cueRect.top + cueRect.height * 0.5;
         const centerY = window.innerHeight * 0.5;
-        const range = window.innerHeight * 0.25;
-        const dist = Math.min(1, Math.abs(cueCenter - centerY) / range);
-        warpEngage = 1 - dist;
+        const range = window.innerHeight * 0.12;
+        const dist = Math.abs(cueCenter - centerY);
+        const inZone = dist < range;
+        if (inZone && !warpEngaged) {
+          warpEngaged = true;
+          warpEngageTime = now;
+          triggerHyperspaceSound();
+        }
+        if (!inZone) {
+          warpEngaged = false;
+        }
+      }
+      if (warpEngageTime > 0) {
+        const elapsed = (now - warpEngageTime) / 1000;
+        warpEngage = Math.max(0, 1 - elapsed / 1.6);
       } else {
         warpEngage = 0;
       }
