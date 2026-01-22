@@ -282,6 +282,11 @@
       color: rgba(255, 255, 255, 0.45);
       transition: color 160ms ease;
     }
+    .metric-body,
+    .section p {
+      color: rgba(255, 255, 255, 0.55);
+      transition: color 180ms ease;
+    }
     .portfolio-spacer {
       height: 12vh;
     }
@@ -341,9 +346,9 @@
         <h2>Purpose-Built Since 2018</h2>
         <p class="full-text">We were built for Applied AI years before it became consensus. Our operator partners shaped billion-user products at WhatsApp, Google, Roblox, IBM, and Shopify, giving founders peer-level support across UX, infrastructure, and GTM.</p>
         <div class="metrics">
-          <div class="metric"><span>Signals</span><h3>As many as 1,000+/day</h3>Live research inputs powering proprietary trend mapping.</div>
-          <div class="metric"><span>Operator DNA</span><h3>2B+ Users</h3>Products built and scaled by our partner team.</div>
-          <div class="metric"><span>Geo Edge</span><h3>San Francisco</h3>Embedded in the epicenter of AI capital and founders.</div>
+          <div class="metric"><span>Signals</span><h3>As many as 1,000+/day</h3><p class="metric-body">Live research inputs powering proprietary trend mapping.</p></div>
+          <div class="metric"><span>Operator DNA</span><h3>2B+ Users</h3><p class="metric-body">Products built and scaled by our partner team.</p></div>
+          <div class="metric"><span>Geo Edge</span><h3>San Francisco</h3><p class="metric-body">Embedded in the epicenter of AI capital and founders.</p></div>
         </div>
       </section>
       <section class="section">
@@ -696,6 +701,7 @@
     let warpEnabled = false;
     let warpStars = [];
     let warpCenter = { x: 0, y: 0 };
+    let warpIntensity = 0;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1059,10 +1065,7 @@
       warpToggle.addEventListener('click', () => {
         warpEnabled = !warpEnabled;
         warpToggle.textContent = warpEnabled ? 'Warp On' : 'Warp Off';
-        if (!warpEnabled) {
-          warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
-          warpStars = [];
-        } else {
+        if (warpEnabled) {
           prepareLogoMask();
           initWarp();
         }
@@ -1087,8 +1090,9 @@
       for (let y = 0; y < logoMaskH; y += step) {
         for (let x = 0; x < logoMaskW; x += step) {
           const idx = (y * logoMaskW + x) * 4;
+          const alpha = logoMask[idx + 3] / 255;
           const lum = logoMask[idx] * 0.299 + logoMask[idx + 1] * 0.587 + logoMask[idx + 2] * 0.114;
-          if (lum < 20) {
+          if (alpha > 0.2 && lum > 60) {
             warpMaskPoints.push({ x, y });
           }
         }
@@ -1106,87 +1110,96 @@
       };
     }
 
-    function isBlackAt(x, y) {
-      if (!logoMask || !logoRectCss) return false;
-      const mx = Math.floor((x - logoRectCss.x) / logoRectCss.w * logoMaskW);
-      const my = Math.floor((y - logoRectCss.y) / logoRectCss.h * logoMaskH);
-      if (mx < 0 || my < 0 || mx >= logoMaskW || my >= logoMaskH) return false;
-      const idx = (my * logoMaskW + mx) * 4;
-      const lum = logoMask[idx] * 0.299 + logoMask[idx + 1] * 0.587 + logoMask[idx + 2] * 0.114;
-      return lum < 20;
-    }
-
-    function pickWarpSpawnPoint() {
-      if (!logoRectCss || warpMaskPoints.length === 0) {
-        return { x: logoRectCss?.x ?? 0, y: logoRectCss?.y ?? 0 };
-      }
-      const centerX = logoRectCss.x + logoRectCss.w * 0.5;
-      const centerY = logoRectCss.y + logoRectCss.h * 0.5;
-      for (let attempt = 0; attempt < 40; attempt++) {
-        const pt = warpMaskPoints[Math.floor(Math.random() * warpMaskPoints.length)];
-        const x = logoRectCss.x + (pt.x + 0.5) / logoMaskW * logoRectCss.w;
-        const y = logoRectCss.y + (pt.y + 0.5) / logoMaskH * logoRectCss.h;
-        if (Math.hypot(x - centerX, y - centerY) < logoRectCss.w * 0.18) {
-          return { x, y };
-        }
-      }
-      return pickWarpPoint();
-    }
-
     function initWarp() {
       if (!logoRectCss || !logoMask || warpMaskPoints.length === 0) return;
-      const targetCount = Math.min(1200, Math.max(320, Math.floor((logoRectCss.w * logoRectCss.h) / 3000)));
+      warpCenter = {
+        x: logoRectCss.x + logoRectCss.w * 0.5,
+        y: logoRectCss.y + logoRectCss.h * 0.5
+      };
+      const targetCount = Math.min(1600, Math.max(420, Math.floor((logoRectCss.w * logoRectCss.h) / 2200)));
       warpStars = [];
       for (let i = 0; i < targetCount; i++) {
-        const p = pickWarpSpawnPoint();
+        const p = pickWarpPoint();
+        let dx = p.x - warpCenter.x;
+        let dy = p.y - warpCenter.y;
+        const len = Math.hypot(dx, dy);
+        if (len < 1) {
+          const angle = Math.random() * Math.PI * 2;
+          dx = Math.cos(angle);
+          dy = Math.sin(angle);
+        } else {
+          dx /= len;
+          dy /= len;
+        }
         warpStars.push({
           x: p.x,
           y: p.y,
-          speed: 40 + Math.random() * 80,
-          alpha: 0.4 + Math.random() * 0.5
+          dirX: dx,
+          dirY: dy,
+          age: Math.random() * 0.15,
+          v0: 40 + Math.random() * 80,
+          alpha: 0.35 + Math.random() * 0.45,
+          tint: 0.86 + Math.random() * 0.12
         });
       }
     }
 
     function updateWarp(dt) {
-      if (!warpEnabled || !logoRectCss) return;
+      if (!logoRectCss || warpStars.length === 0) return;
+      const target = warpEnabled ? 1 : 0;
+      warpIntensity += (target - warpIntensity) * Math.min(1, dt * 4.0);
+      if (warpIntensity < 0.02) {
+        warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
+        return;
+      }
       warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
-      warpCtx.strokeStyle = 'rgba(230, 246, 255, 0.78)';
-      warpCtx.lineWidth = 1;
-      const centerX = logoRectCss.x + logoRectCss.w * 0.5;
-      const centerY = logoRectCss.y + logoRectCss.h * 0.5;
+      warpCtx.globalCompositeOperation = 'lighter';
       for (const p of warpStars) {
-        let dx = (p.x - centerX) / (logoRectCss.w * 0.5);
-        let dy = (p.y - centerY) / (logoRectCss.h * 0.5);
-        const len = Math.hypot(dx, dy) || 1;
-        dx /= len;
-        dy /= len;
-        p.speed += 90 * dt;
-        const prevX = p.x;
-        const prevY = p.y;
-        p.x += dx * p.speed * dt;
-        p.y += dy * p.speed * dt;
-        const trail = Math.min(24, p.speed * 0.22);
+        p.age += dt;
+        const speed = p.v0 * Math.exp(1.7 * p.age);
+        p.x += p.dirX * speed * dt;
+        p.y += p.dirY * speed * dt;
+        const trail = Math.min(320, Math.max(6, speed * 0.085));
+        const thickness = Math.min(2.4, 0.6 + speed * 0.01);
+        const brightness = Math.min(0.95, p.alpha * (0.55 + 0.6 * warpIntensity));
+        const r = Math.floor(225 + 20 * p.tint);
+        const g = Math.floor(240 + 12 * p.tint);
+        const b = 255;
+        warpCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${brightness.toFixed(3)})`;
+        warpCtx.lineWidth = thickness;
 
         if (
-          p.x < logoRectCss.x || p.x > logoRectCss.x + logoRectCss.w ||
-          p.y < logoRectCss.y || p.y > logoRectCss.y + logoRectCss.h ||
-          !isBlackAt(p.x, p.y)
+          p.x < -100 || p.x > warpCanvas.width + 100 ||
+          p.y < -100 || p.y > warpCanvas.height + 100
         ) {
-          const next = pickWarpSpawnPoint();
+          const next = pickWarpPoint();
           p.x = next.x;
           p.y = next.y;
-          p.speed = 40 + Math.random() * 80;
+          let dx = p.x - warpCenter.x;
+          let dy = p.y - warpCenter.y;
+          const len = Math.hypot(dx, dy);
+          if (len < 1) {
+            const angle = Math.random() * Math.PI * 2;
+            dx = Math.cos(angle);
+            dy = Math.sin(angle);
+          } else {
+            dx /= len;
+            dy /= len;
+          }
+          p.dirX = dx;
+          p.dirY = dy;
+          p.age = 0;
+          p.v0 = 40 + Math.random() * 80;
           continue;
         }
 
-        warpCtx.globalAlpha = p.alpha;
+        warpCtx.globalAlpha = 1;
         warpCtx.beginPath();
-        warpCtx.moveTo(p.x - dx * trail, p.y - dy * trail);
+        warpCtx.moveTo(p.x - p.dirX * trail, p.y - p.dirY * trail);
         warpCtx.lineTo(p.x, p.y);
         warpCtx.stroke();
       }
-      warpCtx.globalAlpha = 1;
+      warpCtx.globalCompositeOperation = 'source-over';
     }
     function toNdc(x, y) {
       const nx = (x / window.innerWidth) * 2 - 1;
@@ -1480,6 +1493,20 @@
         scrollCue.style.opacity = (1 - scroll).toFixed(3);
       }
 
+      const bodyTextItems = document.querySelectorAll('.section p, .metric-body');
+      if (bodyTextItems.length) {
+        const centerY = window.innerHeight * 0.5;
+        const falloff = window.innerHeight * 0.45;
+        bodyTextItems.forEach((item) => {
+          const rect = item.getBoundingClientRect();
+          const itemCenter = rect.top + rect.height * 0.5;
+          const dist = Math.min(1, Math.abs(itemCenter - centerY) / falloff);
+          const bright = 1 - dist;
+          const shade = 0.28 + bright * 0.55;
+          item.style.color = `rgba(255, 255, 255, ${shade.toFixed(3)})`;
+        });
+      }
+
       const portfolioItems = document.querySelectorAll('.portfolio li');
       if (portfolioItems.length) {
         const centerY = window.innerHeight * 0.5;
@@ -1489,11 +1516,11 @@
           const itemCenter = rect.top + rect.height * 0.5;
           const dist = Math.min(1, Math.abs(itemCenter - centerY) / falloff);
           const bright = 1 - dist;
-        const shade = 0.2 + bright * 0.75;
-        const scale = 1 + bright * 0.08;
-        item.style.color = `rgba(255, 255, 255, ${shade.toFixed(3)})`;
-        item.style.transform = `scale(${scale.toFixed(3)})`;
-      });
+          const shade = 0.2 + bright * 0.75;
+          const scale = 1 + bright * 0.08;
+          item.style.color = `rgba(255, 255, 255, ${shade.toFixed(3)})`;
+          item.style.transform = `scale(${scale.toFixed(3)})`;
+        });
       }
 
       if (layers.constellation) {
