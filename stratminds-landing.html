@@ -280,12 +280,19 @@
     }
     .portfolio li {
       color: rgba(255, 255, 255, 0.45);
-      transition: color 160ms ease;
+      transition: color 160ms ease, font-size 160ms ease;
     }
     .metric-body,
     .section p {
       color: rgba(255, 255, 255, 0.55);
-      transition: color 180ms ease;
+      transition: color 180ms ease, font-size 160ms ease;
+    }
+    .section h2,
+    .metric h3,
+    .metric span,
+    .tagline,
+    .site-footer {
+      transition: font-size 160ms ease;
     }
     .portfolio-spacer {
       height: 12vh;
@@ -1555,6 +1562,27 @@
         scrollCue.style.opacity = (1 - scroll).toFixed(3);
       }
 
+      const sizeTargets = document.querySelectorAll(
+        '.section h2, .section p, .metric span, .metric h3, .metric-body, .portfolio li, .tagline, .site-footer'
+      );
+      if (sizeTargets.length) {
+        const centerY = window.innerHeight * 0.5;
+        const falloff = window.innerHeight * 0.45;
+        sizeTargets.forEach((item) => {
+          if (!item.dataset.baseFont) {
+            const base = parseFloat(getComputedStyle(item).fontSize);
+            item.dataset.baseFont = base.toFixed(2);
+          }
+          const rect = item.getBoundingClientRect();
+          const itemCenter = rect.top + rect.height * 0.5;
+          const dist = Math.min(1, Math.abs(itemCenter - centerY) / falloff);
+          const bright = 1 - dist;
+          const delta = (bright * 2 - 1) * 3;
+          const baseSize = parseFloat(item.dataset.baseFont);
+          item.style.fontSize = `${(baseSize + delta).toFixed(2)}px`;
+        });
+      }
+
       const bodyTextItems = document.querySelectorAll('.section p, .metric-body');
       if (bodyTextItems.length) {
         const centerY = window.innerHeight * 0.5;
@@ -1579,9 +1607,7 @@
           const dist = Math.min(1, Math.abs(itemCenter - centerY) / falloff);
           const bright = 1 - dist;
           const shade = 0.2 + bright * 0.75;
-          const scale = 1 + bright * 0.08;
           item.style.color = `rgba(255, 255, 255, ${shade.toFixed(3)})`;
-          item.style.transform = `scale(${scale.toFixed(3)})`;
         });
       }
 
