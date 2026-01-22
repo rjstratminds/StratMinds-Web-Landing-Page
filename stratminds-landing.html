@@ -714,6 +714,8 @@
     let whooshBuffer = null;
     let whooshBufferRev = null;
     let whooshActive = false;
+    let whooshPendingDown = false;
+    let whooshPendingUp = false;
     let startTime = performance.now();
     let mouseX = 0.5;
     let mouseY = 0.5;
@@ -1268,6 +1270,14 @@
             }
           }
           whooshBufferRev = rev;
+          if (whooshPendingDown) {
+            whooshPendingDown = false;
+            playWhoosh(false);
+          }
+          if (whooshPendingUp) {
+            whooshPendingUp = false;
+            playWhoosh(true);
+          }
         })
         .catch(() => {});
     }
@@ -1275,7 +1285,14 @@
     function playWhoosh(reverse = false) {
       if (!audioEnabled) return;
       initWhoosh();
-      if (!whooshCtx || !whooshGain || (!whooshBuffer && !whooshBufferRev)) return;
+      if (!whooshCtx || !whooshGain || (!whooshBuffer && !whooshBufferRev)) {
+        if (reverse) {
+          whooshPendingUp = true;
+        } else {
+          whooshPendingDown = true;
+        }
+        return;
+      }
       if (whooshCtx.state === 'suspended') {
         whooshCtx.resume();
       }
@@ -1356,6 +1373,10 @@
         if (audioEnabled) {
           bgAudio.currentTime = 0;
           bgAudio.play().catch(() => {});
+          initWhoosh();
+          if (whooshCtx && whooshCtx.state === 'suspended') {
+            whooshCtx.resume();
+          }
         } else {
           bgAudio.pause();
           bgAudio.currentTime = 0;
