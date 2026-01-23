@@ -127,12 +127,16 @@
       overflow: hidden;
       border: none;
       background: transparent;
+      box-shadow: none;
+      outline: none;
     }
     .video-thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+      border: 0;
+      outline: 0;
     }
     .video-title {
       font-size: 13px;
@@ -411,9 +415,13 @@
       .hero { padding: 12vh 7vw 8vh; }
       .scroll-cue { display: none; }
       .tagline { white-space: normal; text-align: center; max-width: 86vw; }
-      .contact { gap: 12px; }
+      .contact-spacer { display: none; }
+      .contact { position: relative; top: auto; left: 50%; transform: translateX(-50%); margin-top: 18px; pointer-events: auto; }
+      .contact { gap: 12px; position: relative; top: auto !important; }
+      .tagline { top: auto !important; }
       .metrics { grid-template-columns: 1fr; }
       .video-grid { grid-template-columns: 1fr; max-width: 320px; }
+      .video-card { width: 60%; margin: 0 auto; }
     }
   </style>
 </head>
@@ -1654,13 +1662,24 @@
       const postStart = chaosDuration + convergeDuration + lockDuration;
 
       const scan = Math.sin(t * 0.2) * 0.9;
+      let cuePassedCenter = false;
+      const cueEl = document.querySelector('.intro-cue');
+      if (cueEl) {
+        const cueRect = cueEl.getBoundingClientRect();
+        const cueCenter = cueRect.top + cueRect.height * 0.5;
+        cuePassedCenter = cueCenter < window.innerHeight * 0.5;
+      }
       const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
       const scrollRaw = Math.min(1, Math.max(0, window.scrollY / scrollMax));
       const scroll = Math.min(1, scrollRaw / (isMobile ? 0.2 : 0.35));
+      const scrollDark = cuePassedCenter ? 1 : scroll;
       warpScroll = scroll;
 
       mouseStrength = Math.max(0.0, mouseStrength - 0.04);
       if (scrollRaw > 0.05 && !isHolding) {
+        mouseStrength = 0.0;
+      }
+      if (cuePassedCenter) {
         mouseStrength = 0.0;
       }
 
@@ -1679,6 +1698,9 @@
         } else {
           holdReleaseTime = 0;
         }
+      }
+      if (cuePassedCenter) {
+        holdStrength = 0.0;
       }
 
       for (let i = ripples.length - 1; i >= 0; i--) {
@@ -1707,8 +1729,8 @@
       gl.uniform1f(uniforms.converge, converge);
       gl.uniform1f(uniforms.lock, lock);
       gl.uniform1f(uniforms.scan, scan);
-      gl.uniform1f(uniforms.scroll, scroll);
-      gl.uniform1f(uniforms.calm, isMobile ? 0.35 : 1.0);
+      gl.uniform1f(uniforms.scroll, scrollDark);
+      gl.uniform1f(uniforms.calm, (isMobile ? 0.35 : 1.0) * (cuePassedCenter ? 0.2 : 1.0));
       gl.uniform1f(uniforms.scrollFrag, scroll);
       gl.uniform2f(uniforms.mouse, mouseX, mouseY);
       gl.uniform1f(uniforms.mouseStrength, mouseStrength);
