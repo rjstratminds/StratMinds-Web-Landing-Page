@@ -216,12 +216,18 @@
       inset: 0;
       z-index: 3;
       pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 16px;
+      padding-top: 14vh;
     }
     .tagline {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      transform: translateX(-50%);
+      position: static;
+      left: auto;
+      top: auto;
+      transform: none;
       font-family: Avenir, "Avenir Next", "Avenir Next LT Pro", "Segoe UI", Arial, Helvetica, sans-serif;
       font-size: clamp(13px, 1.5vw, 18px);
       letter-spacing: 0.02em;
@@ -433,8 +439,7 @@
   <div class="scroll-cue" id="scrollCue">Scroll</div>
   <div class="intro" id="intro">
     <div class="tagline" id="tagline">StratMinds is a San Francisco-based venture capital &amp; advisory firm founded in 2018, built from inception for Applied AI. We pair financial upside with operational leverage for corporates and sovereign LPs, investing at the frontier where next-gen computing meets human experience.</div>
-    <div class="contact-spacer" aria-hidden="true"></div>
-    <div class="contact" aria-label="Contact links">
+        <div class="contact" aria-label="Contact links">
       <a href="mailto:hello@stratminds.vc" aria-label="Email StratMinds" data-ui="true">📨</a>
       <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">👥</a>
       <a href="https://portal.stratminds.vc/research" target="_blank" rel="noopener noreferrer" aria-label="StratMinds Research Portal" data-ui="true">🔬</a>
@@ -1088,29 +1093,6 @@
           const logoWidth = Math.round((result.bounds.rightNdc - result.bounds.leftNdc) * 0.5 * window.innerWidth);
           tagline.style.setProperty('--logo-w', `${Math.round(logoWidth * 0.8)}px`);
         }
-        if (spacer) {
-          spacer.style.top = `${Math.round(bottomPx + padding)}px`;
-        }
-        requestAnimationFrame(() => {
-          if (contact && spacer) {
-            const tagRect = tagline.getBoundingClientRect();
-            spacer.style.top = `${Math.round(tagRect.bottom)}px`;
-            const gap = 88;
-            contact.style.top = `${Math.round(tagRect.bottom + gap)}px`;
-            if (introCue) {
-              const contactRect = contact.getBoundingClientRect();
-              const triangleHeight = 10;
-              const baseTop = contactRect.bottom + gap;
-              const minTop = window.innerHeight * 0.86;
-              const cueTop = Math.min(Math.max(baseTop, minTop), window.innerHeight - 22);
-              introCue.style.top = `${Math.round(cueTop)}px`;
-              const mainEl = document.querySelector('main');
-              if (mainEl) {
-                mainEl.style.paddingTop = `${Math.round(cueTop + triangleHeight + gap)}px`;
-              }
-            }
-          }
-        });
       }
 
       const budget = getDeviceBudget();
