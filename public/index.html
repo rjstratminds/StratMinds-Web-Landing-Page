@@ -353,10 +353,8 @@
     }
     .intro-cue svg polygon,
     .divider-cue svg polygon {
-      fill: rgba(59, 226, 140, calc(1 - var(--hollow, 0)));
-      stroke: #3be28c;
-      stroke-width: calc(0.5px + 0.5px * var(--hollow, 0));
-      stroke-linejoin: round;
+      fill: rgba(59, 226, 140, calc(1 - var(--fade, 0)));
+      stroke: none;
     }
     .portfolio {
       max-width: 740px;
@@ -455,7 +453,7 @@
       </section>
       <section class="section">
         <h2>Dual Investment Thesis</h2>
-        <p>We invest in AI through a dual-thesis framework: NC × UX.</p>
+        <p><span style="color: #fff;">We invest in AI through a dual-thesis framework: NC × UX.</span></p>
         <p>Next-Gen Computing (NC) backs foundational breakthroughs across the applied-AI tech stack, including model routers, generative AI platforms, and commerce and compute infrastructure.</p>
         <p>User Experience (UX) invests in AI-native products with intuitive, delightful UX for both human–machine and machine–machine interactions, unlocking real-world adoption and scalable growth.</p>
 
@@ -476,17 +474,17 @@
       </section>
       <section class="section">
         <h2>VC + Advisory Platform</h2>
-        <p>We unlock both financial and strategic leverage for LPs by accessing high-quality deal flow, enabling strategic co-investments, and facilitating new business incubation through venture studios and joint ventures for sovereigns, corporates, and families.</p>
+        <p><span style="color: #fff;">We unlock both financial and strategic leverage for LPs</span> by accessing high-quality deal flow, enabling strategic co-investments, and facilitating new business incubation through venture studios and joint ventures for sovereigns, corporates, and families.</p>
         <p>For founders, we provide hands-on support across strategy, structure, product design, and engineering collaboration.</p>
       </section>
       <section class="section">
         <h2>Why Now</h2>
         <p>AI represents a structural platform shift, compounding at a pace of roughly every 3–6 months. With an extraordinary concentration of innovation and capital in cities like San Francisco (approximately 50% of global activity), access to high-quality early-stage deals and deep operating insight remains limited for most investors.</p>
-        <p>Despite recurring concerns about an "AI bubble," early-stage opportunities are frequently mispriced and under-allocated, creating a rare window for first-check advantage and outsized outcomes that are not only financial, but also strategically critical for sovereign and corporate investors.</p>
+        <p>Despite recurring concerns about an "AI bubble," early-stage opportunities are frequently mispriced and under-allocated, creating <span style="color: #fff;">a rare window for first-check advantage and outsized outcomes that are not only financial, but also strategically critical</span> for sovereign and corporate investors.</p>
       </section>
       <section class="section">
         <h2>Performance &amp; Access</h2>
-        <p>AI represents a massive strategic shift for many. Don't go it alone. Do AI right with StratMinds.</p>
+        <p>AI represents a massive strategic shift for many. <span style="color: #fff;">Don't go it alone. Do AI right with StratMinds.</span></p>
         <p>Lead the way. Shape your AI investment strategy with precision. We prioritize what truly matters, partnering with you to drive next-generation AI investments for you and your investors.</p>
       </section>
     </div>
@@ -1753,19 +1751,19 @@
       if (introCue) {
         const cueRect = introCue.getBoundingClientRect();
         const cueCenter = cueRect.top + cueRect.height * 0.5;
-        const screenCenter = window.innerHeight * 0.5;
+        const topQuartile = window.innerHeight * 0.25;
         const screenBottom = window.innerHeight;
-        const hollowProgress = Math.max(0, Math.min(1, (screenBottom - cueCenter) / (screenBottom - screenCenter)));
-        introCue.style.setProperty('--hollow', hollowProgress.toFixed(3));
+        const fadeProgress = Math.max(0, Math.min(1, (screenBottom - cueCenter) / (screenBottom - topQuartile)));
+        introCue.style.setProperty('--fade', fadeProgress.toFixed(3));
       }
       const dividerCue = document.querySelector('.divider-cue');
       if (dividerCue) {
         const divRect = dividerCue.getBoundingClientRect();
         const divCenter = divRect.top + divRect.height * 0.5;
-        const screenCenter = window.innerHeight * 0.5;
+        const topQuartile = window.innerHeight * 0.25;
         const screenBottom = window.innerHeight;
-        const hollowProgress = Math.max(0, Math.min(1, (screenBottom - divCenter) / (screenBottom - screenCenter)));
-        dividerCue.style.setProperty('--hollow', hollowProgress.toFixed(3));
+        const fadeProgress = Math.max(0, Math.min(1, (screenBottom - divCenter) / (screenBottom - topQuartile)));
+        dividerCue.style.setProperty('--fade', fadeProgress.toFixed(3));
       }
       if (introCue) {
         const cueRect = introCue.getBoundingClientRect();
