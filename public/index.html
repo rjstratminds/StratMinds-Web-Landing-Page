@@ -126,7 +126,7 @@
       border-radius: 12px;
       overflow: hidden;
       border: none;
-      background: transparent;
+      background: #000;
       box-shadow: none;
       outline: none;
     }
@@ -417,7 +417,7 @@
       .tagline { white-space: normal; text-align: center; max-width: 86vw; }
       .contact-spacer { display: none; }
       .contact { position: relative; top: auto; left: 50%; transform: translateX(-50%); margin-top: 18px; pointer-events: auto; }
-      .contact { gap: 12px; position: relative; top: auto !important; }
+      .contact { gap: 12px; position: relative; top: auto !important; margin-top: 18px; transform: translateX(-50%); }
       .tagline { top: auto !important; }
       .metrics { grid-template-columns: 1fr; }
       .video-grid { grid-template-columns: 1fr; max-width: 320px; }
@@ -1730,7 +1730,7 @@
       gl.uniform1f(uniforms.lock, lock);
       gl.uniform1f(uniforms.scan, scan);
       gl.uniform1f(uniforms.scroll, scrollDark);
-      gl.uniform1f(uniforms.calm, (isMobile ? 0.35 : 1.0) * (cuePassedCenter ? 0.2 : 1.0));
+      gl.uniform1f(uniforms.calm, (isMobile ? 0.35 : 1.0) * (cuePassedCenter ? 0.12 : 1.0));
       gl.uniform1f(uniforms.scrollFrag, scroll);
       gl.uniform2f(uniforms.mouse, mouseX, mouseY);
       gl.uniform1f(uniforms.mouseStrength, mouseStrength);
