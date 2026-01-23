@@ -125,8 +125,8 @@
       aspect-ratio: 16 / 9;
       border-radius: 12px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
+      border: none;
+      background: transparent;
     }
     .video-thumb img {
       width: 100%;
@@ -405,6 +405,21 @@
       border-right: 7px solid transparent;
       border-top: 10px solid #3be28c;
       opacity: 0.85;
+      position: relative;
+    }
+
+    .intro-cue.is-hollow::after,
+    .divider-cue.is-hollow::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: -8px;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid #000;
     }
     .metric--primary {
       transform: scale(1.08);
@@ -434,11 +449,7 @@
     <div class="contact-spacer" aria-hidden="true"></div>
     <div class="contact" aria-label="Contact links">
       <a href="mailto:hello@stratminds.vc" aria-label="Email StratMinds" data-ui="true">📨</a>
-      <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M20.45 20.45h-3.55v-5.56c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.95v5.65H9.36V9h3.41v1.56h.05c.48-.9 1.66-1.85 3.41-1.85 3.65 0 4.32 2.4 4.32 5.52v6.22zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.78C.8 0 0 .77 0 1.72v20.55C0 23.23.8 24 1.78 24h20.44C23.2 24 24 23.23 24 22.27V1.72C24 .77 23.2 0 22.22 0z"/>
-        </svg>
-      </a>
+      <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">🔗</a>
       <a href="https://portal.stratminds.vc/research" target="_blank" rel="noopener noreferrer" aria-label="StratMinds Research Portal" data-ui="true">🔬</a>
     </div>
     <div class="intro-cue" aria-hidden="true"></div>
@@ -1765,6 +1776,17 @@
         if (mainEl) {
           mainEl.style.paddingTop = `${Math.round(cueTop + triangleHeight + gap)}px`;
         }
+      }
+      if (introCue) {
+        const cueRect = introCue.getBoundingClientRect();
+        const cueCenter = cueRect.top + cueRect.height * 0.5;
+        introCue.classList.toggle('is-hollow', cueCenter < window.innerHeight * 0.5);
+      }
+      const dividerCue = document.querySelector('.divider-cue');
+      if (dividerCue) {
+        const divRect = dividerCue.getBoundingClientRect();
+        const divCenter = divRect.top + divRect.height * 0.5;
+        dividerCue.classList.toggle('is-hollow', divCenter < window.innerHeight * 0.5);
       }
       if (introCue) {
         const cueRect = introCue.getBoundingClientRect();
