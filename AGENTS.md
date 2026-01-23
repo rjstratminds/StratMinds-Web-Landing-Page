@@ -11,6 +11,22 @@
 - Organized media under `public/media/` with subfolders for audio, video, icon, image, logo.
 - Deployed to Firebase Hosting project `stratminds-ai-bot`.
 
+## Recent Updates (Jan 2026)
+- **Intro Layout**: Fixed positioning so tagline, contact icons, and green triangle flow vertically below logo with consistent 48px spacing using flexbox.
+- **Green Triangles**: Replaced CSS border triangles with SVG polygons that:
+  - Gradually hollow out (fill fades, stroke remains) as they scroll from bottom to center of screen.
+  - Use thin 1px stroke when fully hollow.
+  - Controlled via `--hollow` CSS custom property updated in JS render loop.
+- **Logo Dimming**: Logo particles dim to near-black (0.04 brightness) when "Purpose-Built Since 2018" section reaches 50% viewport height for text legibility.
+- **Video Thumbnails**:
+  - Added thin white border (`1px solid rgba(255,255,255,0.35)`).
+  - White text titles on transparent background.
+  - Reduced size to 70% (max-width: 392px).
+  - Renamed second video title to "UX for AI".
+- **Metric Headings**: "As many as 1,000+/day", "2B+ Users", "San Francisco" now use green color (#3be28c).
+- **Text Blocks**: Increased max-width from 46ch to 69ch (50% wider).
+- **Content Updates**: Rewrote copy for Dual Investment Thesis, VC + Advisory Platform, Why Now, and Performance & Access sections.
+
 ## Current Structure
 - Entry point: `public/index.html`
 - Media:
@@ -23,9 +39,9 @@
 ## Video Overlay
 - Two tiles under "Dual Investment Thesis":
   - Intro to StratMinds
-  - Our Thesis: UX for AI
+  - UX for AI
 - Clicking a tile opens a modal and auto-mutes site audio.
-- Playback speed controls: 0.75x / 1x / 1.25x.
+- Playback speed controls removed (native controls only).
 
 ## Audio Rules
 - Sound toggle controls background ambience.

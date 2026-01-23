@@ -92,7 +92,7 @@
       font-size: clamp(14px, 1.35vw, 18px);
       line-height: 1.6;
       color: var(--soft);
-      max-width: 46ch;
+      max-width: 69ch;
       padding: 10px 12px;
       margin: 0 auto;
       border: none;
@@ -108,7 +108,10 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
-      max-width: 560px;
+      max-width: 392px;
+      background: transparent;
+      border: none;
+      padding: 0;
     }
     .video-card {
       display: flex;
@@ -118,6 +121,9 @@
       color: var(--ink);
       gap: 10px;
       cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 0;
     }
     .video-thumb {
       position: relative;
@@ -125,7 +131,7 @@
       aspect-ratio: 16 / 9;
       border-radius: 12px;
       overflow: hidden;
-      border: none;
+      border: 1px solid rgba(255, 255, 255, 0.35);
       background: #000;
       box-shadow: none;
       outline: none;
@@ -142,11 +148,11 @@
       font-size: 13px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #000;
+      color: rgba(255, 255, 255, 0.85);
       text-align: center;
-      background: rgba(255, 255, 255, 0.92);
-      padding: 4px 12px;
-      border-radius: 999px;
+      background: transparent;
+      padding: 4px 0;
+      border-radius: 0;
     }
     .video-modal {
       position: fixed;
@@ -205,6 +211,7 @@
       font-size: clamp(16px, 1.6vw, 20px);
       margin-bottom: 0.6vh;
       white-space: normal;
+      color: #3be28c;
     }
     .metric span {
       display: block;
@@ -223,7 +230,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      gap: 10px;
+      gap: 48px;
       padding-top: 20vh;
     }
     .tagline {
@@ -291,10 +298,7 @@
       pointer-events: auto;
     }
     .contact {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      transform: translateX(-50%);
+      position: static;
       display: flex;
       gap: 14px;
       z-index: 3;
@@ -335,17 +339,24 @@
       fill: currentColor;
     }
     .intro-cue {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-top: 10px solid #3be28c;
+      position: relative;
+      width: 14px;
+      height: 12px;
       z-index: 3;
       pointer-events: none;
+    }
+    .intro-cue svg,
+    .divider-cue svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .intro-cue svg polygon,
+    .divider-cue svg polygon {
+      fill: rgba(59, 226, 140, calc(1 - var(--hollow, 0)));
+      stroke: #3be28c;
+      stroke-width: calc(0.5px + 0.5px * var(--hollow, 0));
+      stroke-linejoin: round;
     }
     .portfolio {
       max-width: 740px;
@@ -390,29 +401,13 @@
       letter-spacing: 0.02em;
     }
     .divider-cue {
-      width: 0;
-      height: 0;
+      width: 14px;
+      height: 12px;
       margin: 24px auto 88px;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-top: 10px solid #3be28c;
       opacity: 0.85;
       position: relative;
     }
 
-    .intro-cue.is-hollow::after,
-    .divider-cue.is-hollow::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: -8px;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 7px solid #000;
-    }
     .metric--primary {
       transform: scale(1.08);
     }
@@ -425,11 +420,9 @@
       .scroll-cue { display: none; }
       .tagline { white-space: normal; text-align: center; max-width: 86vw; }
       .contact-spacer { display: none; }
-      .contact { position: relative; top: auto; left: 50%; transform: translateX(-50%); margin-top: 18px; pointer-events: auto; }
-      .contact { gap: 12px; position: relative; top: auto !important; margin-top: 18px; transform: translateX(-50%); }
-      .tagline { top: auto !important; }
+      .contact { gap: 12px; pointer-events: auto; }
       .metrics { grid-template-columns: 1fr; }
-      .video-grid { grid-template-columns: 1fr; max-width: 320px; }
+      .video-grid { grid-template-columns: 1fr; max-width: 224px; }
       .video-card { width: 60%; margin: 0 auto; }
     }
   </style>
@@ -447,7 +440,7 @@
       <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">👥</a>
       <a href="https://portal.stratminds.vc/research" target="_blank" rel="noopener noreferrer" aria-label="StratMinds Research Portal" data-ui="true">🔬</a>
     </div>
-    <div class="intro-cue" aria-hidden="true"></div>
+    <div class="intro-cue" aria-hidden="true"><svg viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg"><polygon points="7,12 0,0 14,0"/></svg></div>
   </div>
   <main>
     <div class="sections">
@@ -462,7 +455,9 @@
       </section>
       <section class="section">
         <h2>Dual Investment Thesis</h2>
-        <p><strong>Next-Gen Computing</strong> backs foundational breakthroughs in AI, compute, and infrastructure. <strong>User Experience</strong> invests in AI-native interfaces and human-machine interaction that unlock adoption.</p>
+        <p>We invest in AI through a dual-thesis framework: NC × UX.</p>
+        <p>Next-Gen Computing (NC) backs foundational breakthroughs across the applied-AI tech stack, including model routers, generative AI platforms, and commerce and compute infrastructure.</p>
+        <p>User Experience (UX) invests in AI-native products with intuitive, delightful UX for both human–machine and machine–machine interactions, unlocking real-world adoption and scalable growth.</p>
 
         <div class="video-grid" aria-label="Featured videos">
           <button class="video-card" data-video="media/video/Intro to StratMinds v3.1b.mp4" aria-label="Play Intro to StratMinds" data-ui="true">
@@ -475,24 +470,27 @@
             <div class="video-thumb">
               <img src="media/video/StratMinds UX fund thesis icon.jpg" alt="Our Thesis: UX for AI" />
             </div>
-            <div class="video-title">Our Thesis: UX for AI</div>
+            <div class="video-title">UX for AI</div>
           </button>
         </div>
       </section>
       <section class="section">
         <h2>VC + Advisory Platform</h2>
-        <p>We unlock strategic leverage for LPs through co-investments, venture studios, R&amp;D partnerships, and AI transformation initiatives. For founders, we deliver deep UX, GTM, and product execution support.</p>
+        <p>We unlock both financial and strategic leverage for LPs by accessing high-quality deal flow, enabling strategic co-investments, and facilitating new business incubation through venture studios and joint ventures for sovereigns, corporates, and families.</p>
+        <p>For founders, we provide hands-on support across strategy, structure, product design, and engineering collaboration.</p>
       </section>
       <section class="section">
         <h2>Why Now</h2>
-        <p>AI is a structural platform shift, compounding every 3-6 months. Early-stage access remains underpriced and under-allocated, creating a rare window for first-check advantage and outsized outcomes.</p>
+        <p>AI represents a structural platform shift, compounding at a pace of roughly every 3–6 months. With an extraordinary concentration of innovation and capital in cities like San Francisco (approximately 50% of global activity), access to high-quality early-stage deals and deep operating insight remains limited for most investors.</p>
+        <p>Despite recurring concerns about an "AI bubble," early-stage opportunities are frequently mispriced and under-allocated, creating a rare window for first-check advantage and outsized outcomes that are not only financial, but also strategically critical for sovereign and corporate investors.</p>
       </section>
       <section class="section">
         <h2>Performance &amp; Access</h2>
-        <p>StratMinds builds conviction early and earns allocation through hands-on product, UX, and GTM support. Our access is driven by embedded SF networks and proprietary signal intelligence.</p>
+        <p>AI represents a massive strategic shift for many. Don't go it alone. Do AI right with StratMinds.</p>
+        <p>Lead the way. Shape your AI investment strategy with precision. We prioritize what truly matters, partnering with you to drive next-generation AI investments for you and your investors.</p>
       </section>
     </div>
-    <div class="divider-cue" aria-hidden="true"></div>
+    <div class="divider-cue" aria-hidden="true"><svg viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg"><polygon points="7,12 0,0 14,0"/></svg></div>
     <div class="portfolio" aria-label="Portfolio companies">
       <ul>
         <li>MaintainX</li>
@@ -748,7 +746,7 @@
       float shade = vTone * vFlicker;
       shade *= mix(1.0, 0.45, isConstellation);
       shade += vScan * 0.45 * (1.0 - isConstellation);
-      shade *= mix(1.0, 0.12, uScroll) * (1.0 - isConstellation);
+      shade *= max(0.04, mix(1.0, 0.12, uScroll)) * (1.0 - isConstellation);
       vec3 baseColor = vec3(shade);
       vec3 hiddenColor = vec3(0.4, 0.98, 0.7);
       vec3 finalColor = mix(baseColor, hiddenColor, vHidden);
@@ -1082,19 +1080,20 @@
       prepareLogoMask();
       initWarp();
 
+      const introEl = document.getElementById('intro');
       const tagline = document.getElementById('tagline');
       const contact = document.querySelector('.contact');
       const spacer = document.querySelector('.contact-spacer');
       const introCue = document.querySelector('.intro-cue');
-      if (tagline) {
-        const padding = 40;
-        tagline.style.top = `${Math.round(bottomPx + padding)}px`;
+      if (introEl && tagline) {
+        const padding = 48;
+        introEl.style.paddingTop = `${Math.round(bottomPx + padding)}px`;
         if (result.usedImage) {
           const logoRect = getImageRect(window.innerWidth, window.innerHeight, imageAsset);
-          tagline.style.setProperty('--logo-w', `${Math.round(logoRect.w * 0.8)}px`);
+          tagline.style.setProperty('--logo-w', `${Math.round(logoRect.w - 180)}px`);
         } else {
           const logoWidth = Math.round((result.bounds.rightNdc - result.bounds.leftNdc) * 0.5 * window.innerWidth);
-          tagline.style.setProperty('--logo-w', `${Math.round(logoWidth * 0.8)}px`);
+          tagline.style.setProperty('--logo-w', `${Math.round(logoWidth - 180)}px`);
         }
       }
 
@@ -1654,10 +1653,17 @@
         const cueCenter = cueRect.top + cueRect.height * 0.5;
         cuePassedCenter = cueCenter < window.innerHeight * 0.5;
       }
+      let sectionAtCenter = false;
+      const firstSection = document.querySelector('.section');
+      if (firstSection) {
+        const sectionRect = firstSection.getBoundingClientRect();
+        const sectionTop = sectionRect.top;
+        sectionAtCenter = sectionTop < window.innerHeight * 0.5;
+      }
       const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
       const scrollRaw = Math.min(1, Math.max(0, window.scrollY / scrollMax));
       const scroll = Math.min(1, scrollRaw / (isMobile ? 0.2 : 0.35));
-      const scrollDark = cuePassedCenter ? 1 : scroll;
+      const scrollDark = sectionAtCenter ? 1.5 : (cuePassedCenter ? 1 : scroll);
       warpScroll = scroll;
 
       mouseStrength = Math.max(0.0, mouseStrength - 0.04);
@@ -1742,28 +1748,24 @@
       }
       const introCue = document.querySelector('.intro-cue');
       if (introCue) {
-        const currentTop = parseFloat(introCue.style.top || '0');
-        const minTop = window.innerHeight * 0.86;
-        const gap = 88;
-        const triangleHeight = 10;
-        const cueTop = Math.min(Math.max(currentTop, minTop), window.innerHeight - 22);
-        introCue.style.top = `${Math.round(cueTop)}px`;
         introCue.style.opacity = '1';
-        const mainEl = document.querySelector('main');
-        if (mainEl) {
-          mainEl.style.paddingTop = `${Math.round(cueTop + triangleHeight + gap)}px`;
-        }
       }
       if (introCue) {
         const cueRect = introCue.getBoundingClientRect();
         const cueCenter = cueRect.top + cueRect.height * 0.5;
-        introCue.classList.toggle('is-hollow', cueCenter < window.innerHeight * 0.5);
+        const screenCenter = window.innerHeight * 0.5;
+        const screenBottom = window.innerHeight;
+        const hollowProgress = Math.max(0, Math.min(1, (screenBottom - cueCenter) / (screenBottom - screenCenter)));
+        introCue.style.setProperty('--hollow', hollowProgress.toFixed(3));
       }
       const dividerCue = document.querySelector('.divider-cue');
       if (dividerCue) {
         const divRect = dividerCue.getBoundingClientRect();
         const divCenter = divRect.top + divRect.height * 0.5;
-        dividerCue.classList.toggle('is-hollow', divCenter < window.innerHeight * 0.5);
+        const screenCenter = window.innerHeight * 0.5;
+        const screenBottom = window.innerHeight;
+        const hollowProgress = Math.max(0, Math.min(1, (screenBottom - divCenter) / (screenBottom - screenCenter)));
+        dividerCue.style.setProperty('--hollow', hollowProgress.toFixed(3));
       }
       if (introCue) {
         const cueRect = introCue.getBoundingClientRect();
