@@ -193,6 +193,27 @@
       text-transform: uppercase;
       cursor: pointer;
     }
+    .video-rate {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .video-rate__btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .video-rate__btn.is-active {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
     .metrics {
       margin-top: 2vh;
       display: grid;
@@ -1535,6 +1556,15 @@
     const videoPlayer = document.getElementById('videoPlayer');
     const videoClose = document.getElementById('videoClose');
     const videoCards = document.querySelectorAll('.video-card');
+    const videoRates = document.querySelectorAll('.video-rate__btn');
+
+    function setVideoRate(rate) {
+      if (!videoPlayer) return;
+      videoPlayer.playbackRate = rate;
+      videoRates.forEach((btn) => {
+        btn.classList.toggle('is-active', parseFloat(btn.dataset.rate) == rate);
+      });
+    }
 
     function stopSiteAudio() {
       audioEnabled = false;
@@ -1553,6 +1583,7 @@
       videoPlayer.src = src;
       videoModal.classList.add('is-open');
       videoModal.setAttribute('aria-hidden', 'false');
+      setVideoRate(1);
       videoPlayer.play().catch(() => {});
     }
 
@@ -1850,6 +1881,11 @@
   <div class="video-modal" id="videoModal" aria-hidden="true">
     <div class="video-modal__panel">
       <button class="video-modal__close" type="button" id="videoClose" data-ui="true">Close</button>
+      <div class="video-rate" aria-label="Playback speed">
+        <button type="button" class="video-rate__btn" data-rate="0.75">0.75x</button>
+        <button type="button" class="video-rate__btn is-active" data-rate="1">1x</button>
+        <button type="button" class="video-rate__btn" data-rate="1.25">1.25x</button>
+      </div>
       <video id="videoPlayer" playsinline controls></video>
     </div>
   </div>
