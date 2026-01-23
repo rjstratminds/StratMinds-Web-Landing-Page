@@ -142,8 +142,11 @@
       font-size: 13px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--ink);
+      color: #000;
       text-align: center;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 4px 12px;
+      border-radius: 999px;
     }
     .video-modal {
       position: fixed;
@@ -220,8 +223,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      gap: 16px;
-      padding-top: 14vh;
+      gap: 10px;
+      padding-top: 20vh;
     }
     .tagline {
       position: static;
@@ -229,16 +232,16 @@
       top: auto;
       transform: none;
       font-family: Avenir, "Avenir Next", "Avenir Next LT Pro", "Segoe UI", Arial, Helvetica, sans-serif;
-      font-size: clamp(13px, 1.5vw, 18px);
+      font-size: clamp(14px, 1.6vw, 19px);
       letter-spacing: 0.02em;
       text-transform: none;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.92);
       text-align: center;
       pointer-events: none;
       white-space: normal;
       width: min(var(--logo-w, 72vw), 90vw);
       max-width: none;
-      line-height: 1.6;
+      line-height: 1.7;
       opacity: 0;
       transition: opacity 120ms linear;
       z-index: 3;
