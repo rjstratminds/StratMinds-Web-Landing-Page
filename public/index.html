@@ -199,6 +199,9 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1vh 0.8vw;
+      max-width: 620px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .metric {
       border: none;
@@ -432,7 +435,7 @@
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
   <div class="scroll-cue" id="scrollCue">Scroll</div>
   <div class="intro" id="intro">
-    <div class="tagline" id="tagline">StratMinds is a San Francisco-based venture capital &amp; advisory firm founded in 2018, built from inception for Applied AI. We pair financial upside with operational leverage for corporates and sovereign LPs, investing at the frontier where next-gen computing meets human experience.</div>
+    <div class="tagline" id="tagline">StratMinds is a <span style="color: #3be28c;">San Francisco-based venture capital &amp; advisory firm</span> founded in 2018, built from inception for Applied AI. We pair financial upside with operational leverage for corporates and sovereign LPs, investing at the frontier where next-gen computing meets human experience.</div>
         <div class="contact" aria-label="Contact links">
       <a href="mailto:hello@stratminds.vc" aria-label="Email StratMinds" data-ui="true">📨</a>
       <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">👥</a>
@@ -475,17 +478,17 @@
       <section class="section">
         <h2>VC + Advisory Platform</h2>
         <p><span style="color: #fff;">We unlock both financial and strategic leverage for LPs</span> by accessing high-quality deal flow, enabling strategic co-investments, and facilitating new business incubation through venture studios and joint ventures for sovereigns, corporates, and families.</p>
-        <p>For founders, we provide hands-on support across strategy, structure, product design, and engineering collaboration.</p>
+        <p><span style="color: #fff;">For founders, we provide hands-on support</span> across strategy, structure, product design, and engineering collaboration.</p>
       </section>
       <section class="section">
         <h2>Why Now</h2>
-        <p>AI represents a structural platform shift, compounding at a pace of roughly every 3–6 months. With an extraordinary concentration of innovation and capital in cities like San Francisco (approximately 50% of global activity), access to high-quality early-stage deals and deep operating insight remains limited for most investors.</p>
+        <p>AI represents a structural platform shift, compounding at a pace of roughly every 3–6 months. With an <span style="color: #fff;">extraordinary concentration of innovation and capital in cities like San Francisco</span> (approximately 50% of global activity), access to high-quality early-stage deals and deep operating insight remains limited for most investors.</p>
         <p>Despite recurring concerns about an "AI bubble," early-stage opportunities are frequently mispriced and under-allocated, creating <span style="color: #fff;">a rare window for first-check advantage and outsized outcomes that are not only financial, but also strategically critical</span> for sovereign and corporate investors.</p>
       </section>
       <section class="section">
         <h2>Performance &amp; Access</h2>
         <p>AI represents a massive strategic shift for many. <span style="color: #fff;">Don't go it alone. Do AI right with StratMinds.</span></p>
-        <p>Lead the way. Shape your AI investment strategy with precision. We prioritize what truly matters, partnering with you to drive next-generation AI investments for you and your investors.</p>
+        <p>Lead the way. Shape your AI investment strategy with precision. We prioritize what truly matters, partnering with you to drive next-generation AI investments and tech enablements.</p>
       </section>
     </div>
     <div class="divider-cue" aria-hidden="true"><svg viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg"><polygon points="7,12 0,0 14,0"/></svg></div>
@@ -744,7 +747,7 @@
       float shade = vTone * vFlicker;
       shade *= mix(1.0, 0.45, isConstellation);
       shade += vScan * 0.45 * (1.0 - isConstellation);
-      shade *= max(0.04, mix(1.0, 0.12, uScroll)) * (1.0 - isConstellation);
+      shade *= max(0.0005, mix(1.0, 0.12, uScroll)) * (1.0 - isConstellation);
       vec3 baseColor = vec3(shade);
       vec3 hiddenColor = vec3(0.4, 0.98, 0.7);
       vec3 finalColor = mix(baseColor, hiddenColor, vHidden);
@@ -1658,10 +1661,16 @@
         const sectionTop = sectionRect.top;
         sectionAtCenter = sectionTop < window.innerHeight * 0.5;
       }
+      let introOverLogo = false;
+      const taglineEl = document.getElementById('tagline');
+      if (taglineEl && logoRectCss) {
+        const taglineRect = taglineEl.getBoundingClientRect();
+        introOverLogo = taglineRect.top < (logoRectCss.y + logoRectCss.h);
+      }
       const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
       const scrollRaw = Math.min(1, Math.max(0, window.scrollY / scrollMax));
       const scroll = Math.min(1, scrollRaw / (isMobile ? 0.2 : 0.35));
-      const scrollDark = sectionAtCenter ? 1.5 : (cuePassedCenter ? 1 : scroll);
+      const scrollDark = sectionAtCenter ? 1.5 : (introOverLogo ? 1.5 : (cuePassedCenter ? 1 : scroll));
       warpScroll = scroll;
 
       mouseStrength = Math.max(0.0, mouseStrength - 0.04);
