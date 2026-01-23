@@ -1549,6 +1549,7 @@
       });
     }
 
+    window.addEventListener('DOMContentLoaded', () => {
     const videoModal = document.getElementById('videoModal');
     const videoPlayer = document.getElementById('videoPlayer');
     const videoClose = document.getElementById('videoClose');
@@ -1613,6 +1614,7 @@
       if (event.key === 'Escape') {
         closeVideo();
       }
+    });
     });
 
     gl.clearColor(0, 0, 0, 1);
