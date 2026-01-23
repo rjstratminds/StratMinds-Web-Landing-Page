@@ -12,6 +12,34 @@
 - Deployed to Firebase Hosting project `stratminds-ai-bot`.
 
 ## Recent Updates (Jan 2026)
+
+### Hidden Text Interactive LinkedIn Links
+- **Hidden Text**: Displays team names (Richard Jhang, Anton Borzov, Summer Kim, Arie Fisher) in 4 columns when holding/pressing on logo area.
+- **Interactive**: Hold for 600ms+ to reveal names, release over a name to open their LinkedIn profile.
+- **Hit Detection**: Uses computed bounds from actual particle positions, converted to screen coordinates with 10px buffer and 40px vertical offset.
+- **LinkedIn URLs**:
+  - Richard Jhang → linkedin.com/in/richardjhang/
+  - Anton Borzov → linkedin.com/in/tyggy/
+  - Summer Kim → linkedin.com/in/skim725/
+  - Arie Fisher → linkedin.com/in/ariefisher/
+
+### Contact Strip
+- Changed from emoji icons to text links: `email.` `linkedIn.` `portal.`
+- Default color: `rgba(255, 255, 255, 0.68)`
+- Hover/focus: green `#3be28c`
+- `portal.` has `opacity: 0.85` (slightly softer)
+- Font size: 16px desktop, 12px mobile
+
+### Performance Optimizations
+- **Desktop**: Logo particles increased 50% (multiplier 5.4), hidden text 2x sharper (stepDiv 240k, 2.1M particles)
+- **Mobile**: Logo particles reduced (multiplier 1.35), hidden text 2x sharper (stepDiv 180k, 1.4M particles), logo 20% larger (scale 0.82)
+- **Settle behavior**: Logo settles after 1.5s idle at top (animations reduce to 2%)
+- **Mobile animation**: Logo settles in 1.5s (vs 3.6s desktop)
+
+### Video Thumbnails
+- Reduced size 20% (max-width 314px desktop, 280px mobile)
+- Mobile now shows 2 columns instead of 1
+
 - **Intro Layout**: Fixed positioning so tagline, contact icons, and green triangle flow vertically below logo with consistent 48px spacing using flexbox.
 - **Green Triangles**: Replaced CSS border triangles with SVG polygons that:
   - Gradually hollow out (fill fades, stroke remains) as they scroll from bottom to center of screen.

@@ -108,7 +108,7 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
-      max-width: 392px;
+      max-width: 314px;
       background: transparent;
       border: none;
       padding: 0;
@@ -319,28 +319,23 @@
       opacity: 0;
     }
     .contact a {
-      width: 30px;
-      height: 30px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: var(--ink);
+      color: rgba(255, 255, 255, 0.68);
       text-decoration: none;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 999px;
-      font-size: 18px;
+      font-size: 16px;
+      letter-spacing: 0.04em;
       line-height: 1;
       pointer-events: auto;
+      transition: color 180ms ease;
     }
-    .contact a:first-child,
-    .contact a:nth-child(3),
-    .contact a:nth-child(4) {
-      font-size: 27px;
+    .contact a:hover,
+    .contact a:focus {
+      color: #3be28c;
     }
-    .contact svg {
-      width: 27px;
-      height: 27px;
-      fill: currentColor;
+    .contact a.portal {
+      opacity: 0.85;
     }
     .intro-cue {
       position: relative;
@@ -423,9 +418,10 @@
       .tagline { white-space: normal; text-align: center; max-width: 86vw; width: 86vw !important; }
       .contact-spacer { display: none; }
       .contact { gap: 12px; pointer-events: auto; }
+      .contact a { font-size: 12px; }
       .metrics { grid-template-columns: 1fr; }
-      .video-grid { grid-template-columns: 1fr; max-width: 224px; }
-      .video-card { width: 60%; margin: 0 auto; }
+      .video-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 280px; }
+      .video-card { width: 100%; margin: 0; }
     }
   </style>
 </head>
@@ -438,9 +434,9 @@
   <div class="intro" id="intro">
     <div class="tagline" id="tagline">StratMinds is a <span style="color: #3be28c;">San Francisco-based venture capital &amp; advisory firm</span> founded in 2018, built from inception for Applied AI. We pair financial upside with operational leverage for corporates and sovereign LPs, investing at the frontier where next-gen computing meets human experience.</div>
         <div class="contact" aria-label="Contact links">
-      <a href="mailto:hello@stratminds.vc" aria-label="Email StratMinds" data-ui="true">📨</a>
-      <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">👥</a>
-      <a href="https://portal.stratminds.vc/research" target="_blank" rel="noopener noreferrer" aria-label="StratMinds Research Portal" data-ui="true">🔬</a>
+      <a href="mailto:hello@stratminds.vc" aria-label="Email StratMinds" data-ui="true">email.</a>
+      <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">linkedIn.</a>
+      <a href="https://portal.stratminds.vc/research" target="_blank" rel="noopener noreferrer" aria-label="StratMinds Research Portal" class="portal" data-ui="true">portal.</a>
     </div>
     <div class="intro-cue" aria-hidden="true"><svg viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg"><polygon points="7,12 0,0 14,0"/></svg></div>
   </div>
@@ -737,8 +733,8 @@
       float d = length(uv);
       float coreBase = smoothstep(0.32, 0.08, d);
       float haloBase = smoothstep(0.56, 0.14, d) * 0.12;
-      float coreHidden = smoothstep(0.2, 0.02, d);
-      float haloHidden = smoothstep(0.34, 0.08, d) * 0.02;
+      float coreHidden = smoothstep(0.1, 0.0, d);
+      float haloHidden = smoothstep(0.18, 0.02, d) * 0.01;
       float core = mix(coreBase, coreHidden, vHidden);
       float halo = mix(haloBase, haloHidden, vHidden);
       float alpha = mix(core, halo, uPass);
@@ -750,7 +746,7 @@
       shade += vScan * 0.45 * (1.0 - isConstellation);
       shade *= max(0.0005, mix(1.0, 0.12, uScroll)) * (1.0 - isConstellation);
       vec3 baseColor = vec3(shade);
-      vec3 hiddenColor = vec3(0.4, 0.98, 0.7);
+      vec3 hiddenColor = vec3(0.55, 1.0, 0.8);
       vec3 finalColor = mix(baseColor, hiddenColor, vHidden);
       float finalAlpha = alpha;
       finalAlpha *= mix(1.0, 0.4, isConstellation);
@@ -829,6 +825,7 @@
     let logoMaskW = 0;
     let logoMaskH = 0;
     let warpMaskPoints = [];
+    let hiddenTextHitAreas = null;
     let warpEnabled = true;
     let warpStars = [];
     let warpCenter = { x: 0, y: 0 };
@@ -861,6 +858,9 @@
     const ripplePositions = new Float32Array(MAX_RIPPLES * 2);
     const rippleAges = new Float32Array(MAX_RIPPLES);
     let lastTime = performance.now();
+    let idleAtTopStart = 0;
+    let lastScrollY = 0;
+    let lastInteractionTime = performance.now();
 
     function createLayer(targets, seeds, tones, altTargets) {
       const vao = gl.createVertexArray();
@@ -902,7 +902,8 @@
     }
 
     function getImageRect(width, height, img) {
-      const scale = Math.min(width / img.width, height / img.height) * 0.68;
+      const baseScale = isMobile ? 0.82 : 0.68;
+      const scale = Math.min(width / img.width, height / img.height) * baseScale;
       const drawW = img.width * scale;
       const drawH = img.height * scale;
       const x = (width - drawW) / 2;
@@ -1013,6 +1014,56 @@
       return points;
     }
 
+    function buildColumnsTextPoints(width, height, columns, options = {}) {
+      const scale = options.scale || 1.1;
+      const c = document.createElement('canvas');
+      const rawW = width * scale;
+      const rawH = height * scale;
+      const maxDim = 1600;
+      const factor = Math.min(1, maxDim / Math.max(rawW, rawH));
+      c.width = Math.floor(rawW * factor);
+      c.height = Math.floor(rawH * factor);
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      let fontSize = Math.min(c.width, c.height) * (options.sizeFactor || 0.18);
+      ctx.font = `${options.weight || 600} ${fontSize}px ${options.font || 'Georgia'}`;
+      const lineHeight = fontSize * (options.lineHeight || 1.15);
+      const yPos = (options.yPx ?? (c.height / 2));
+      const colCount = columns.length;
+      const totalWidth = c.width * (options.spreadFactor || 0.7);
+      const colSpacing = totalWidth / (colCount - 1);
+      const startX = (c.width - totalWidth) / 2;
+
+      columns.forEach((col, colIndex) => {
+        const lines = col.split('\n');
+        const colX = startX + colIndex * colSpacing;
+        const startY = yPos - (lines.length - 1) * lineHeight * 0.5;
+        lines.forEach((line, lineIndex) => {
+          ctx.fillText(line, colX, startY + lineIndex * lineHeight);
+        });
+      });
+
+      const data = ctx.getImageData(0, 0, c.width, c.height).data;
+      const points = [];
+      const stepDiv = options.stepDiv || 500;
+      const step = Math.max(1, Math.floor(Math.min(c.width, c.height) / stepDiv));
+      for (let y = 0; y < c.height; y += step) {
+        for (let x = 0; x < c.width; x += step) {
+          const idx = (y * c.width + x) * 4;
+          if (data[idx] > 20) {
+            const nx = (x / c.width) * 2 - 1;
+            const ny = 1 - (y / c.height) * 2;
+            points.push({ x: nx, y: ny });
+          }
+        }
+      }
+      return points;
+    }
+
     function computeBoundsFromPoints(points) {
       let minX = 1e9;
       let minY = 1e9;
@@ -1100,7 +1151,7 @@
       }
 
       const budget = getDeviceBudget();
-      particleCount = Math.min(budget, points.length * 3.6);
+      particleCount = Math.min(budget, points.length * (isMobile ? 1.35 : 5.4));
 
       const targets = new Float32Array(particleCount * 3);
       const seeds = new Float32Array(particleCount);
@@ -1115,19 +1166,39 @@
         targets[i * 3 + 1] = y;
         targets[i * 3 + 2] = 0.0;
         seeds[i] = Math.random();
-        tones[i] = 0.35 + Math.random() * 0.65;
+        tones[i] = 0.44 + Math.random() * 0.56;
       }
       layers.main = createLayer(targets, seeds, tones, targets);
 
-      const hiddenPoints = buildTextPoints(canvas.width, canvas.height, 'StratMinds is an SF-based\nVC & advisory firm\nfocused on Applied AI', {
-        sizeFactor: isMobile ? 0.08 : 0.054,
-        weight: isMobile ? 700 : 500,
-        font: 'Arial',
+      const hiddenSpreadFactor = 0.55;
+      const hiddenPoints = buildColumnsTextPoints(canvas.width, canvas.height, ['Richard\nJhang', 'Anton\nBorzov', 'Summer\nKim', 'Arie\nFisher'], {
+        sizeFactor: isMobile ? 0.047 : 0.057,
+        weight: 900,
+        font: 'Arial Black, Arial, Helvetica, sans-serif',
         lineHeight: 1.12,
-        stepDiv: isMobile ? 600 : 1200,
+        stepDiv: isMobile ? 180000 : 240000,
+        spreadFactor: hiddenSpreadFactor,
         yPx: logoCenterCanvas ?? (canvas.height * 0.5)
       });
-      const hiddenCount = Math.min(isMobile ? 120000 : 82000, hiddenPoints.length * (isMobile ? 5 : 3.2));
+      // Calculate hit areas for each column in screen coordinates
+      const hiddenBounds = computeBoundsFromPoints(hiddenPoints);
+      const screenTop = (1 - (hiddenBounds.topNdc + 1) * 0.5) * window.innerHeight;
+      const screenBottom = (1 - (hiddenBounds.bottomNdc + 1) * 0.5) * window.innerHeight;
+      const screenLeft = ((hiddenBounds.leftNdc + 1) * 0.5) * window.innerWidth;
+      const screenRight = ((hiddenBounds.rightNdc + 1) * 0.5) * window.innerWidth;
+      const totalWidth = screenRight - screenLeft;
+      const colSpacing = totalWidth / 3;
+      hiddenTextHitAreas = {
+        top: screenTop,
+        bottom: screenBottom,
+        columns: [
+          { x: screenLeft, w: colSpacing * 0.7 },
+          { x: screenLeft + colSpacing, w: colSpacing * 0.7 },
+          { x: screenLeft + colSpacing * 2, w: colSpacing * 0.7 },
+          { x: screenRight, w: colSpacing * 0.7 }
+        ]
+      };
+      const hiddenCount = Math.min(isMobile ? 1400000 : 2100000, hiddenPoints.length * (isMobile ? 18 : 20));
       const hiddenTargets = new Float32Array(hiddenCount * 3);
       const hiddenSeeds = new Float32Array(hiddenCount);
       const hiddenTones = new Float32Array(hiddenCount);
@@ -1464,6 +1535,30 @@
       addRipple(e.clientX, e.clientY);
     }, { passive: true });
 
+    const teamLinkedIn = [
+      'https://www.linkedin.com/in/richardjhang/',
+      'https://www.linkedin.com/in/tyggy/',
+      'https://www.linkedin.com/in/skim725/',
+      'https://www.linkedin.com/in/ariefisher/'
+    ];
+
+    function getHiddenTextColumn(x, y) {
+      if (!hiddenTextHitAreas) return -1;
+      const buffer = 10;
+      const verticalOffset = 40;
+      // Check vertical bounds (shifted down)
+      if (y < hiddenTextHitAreas.top - buffer + verticalOffset || y > hiddenTextHitAreas.bottom + buffer + verticalOffset) return -1;
+      // Check each column
+      for (let i = 0; i < hiddenTextHitAreas.columns.length; i++) {
+        const col = hiddenTextHitAreas.columns[i];
+        const halfW = col.w / 2 + buffer;
+        if (x >= col.x - halfW && x <= col.x + halfW) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
     window.addEventListener('pointerup', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
         return;
@@ -1472,10 +1567,19 @@
         playWhoosh(true);
         whooshActive = false;
       }
+      const holdDuration = performance.now() - holdStart;
       holdReleaseTime = performance.now();
-      holdReleaseStrength = Math.min(1.0, (holdReleaseTime - holdStart) / 900);
+      holdReleaseStrength = Math.min(1.0, holdDuration / 900);
       isHolding = false;
       addRipple(e.clientX, e.clientY);
+
+      // If held long enough to reveal hidden text, check for LinkedIn tap
+      if (holdDuration > 600) {
+        const col = getHiddenTextColumn(e.clientX, e.clientY);
+        if (col >= 0 && col < teamLinkedIn.length) {
+          window.open(teamLinkedIn[col], '_blank');
+        }
+      }
     }, { passive: true });
 
     function smoothstep(edge0, edge1, x) {
@@ -1635,8 +1739,8 @@
       lastTime = now;
 
       const chaosDuration = 0.0;
-      const convergeDuration = 2.4;
-      const lockDuration = 1.2;
+      const convergeDuration = isMobile ? 1.0 : 2.4;
+      const lockDuration = isMobile ? 0.5 : 1.2;
 
       let converge = 0;
       let lock = 0;
@@ -1673,6 +1777,23 @@
       const scroll = Math.min(1, scrollRaw / (isMobile ? 0.2 : 0.35));
       const scrollDark = sectionAtCenter ? 1.5 : (introOverLogo ? 1.5 : (cuePassedCenter ? 1 : scroll));
       warpScroll = scroll;
+
+      // Track idle state at top
+      const atTop = scrollRaw < 0.02;
+      const scrollChanged = Math.abs(window.scrollY - lastScrollY) > 1;
+      lastScrollY = window.scrollY;
+      if (scrollChanged || isHolding || mouseStrength > 0.1) {
+        lastInteractionTime = now;
+        idleAtTopStart = 0;
+      }
+      if (atTop && idleAtTopStart === 0 && (now - lastInteractionTime) > 500) {
+        idleAtTopStart = now;
+      }
+      if (!atTop) {
+        idleAtTopStart = 0;
+      }
+      const idleDuration = idleAtTopStart > 0 ? (now - idleAtTopStart) / 1000 : 0;
+      const settleMultiplier = idleAtTopStart > 0 ? Math.max(0.02, 1 - idleDuration / 1.5) : 1.0;
 
       mouseStrength = Math.max(0.0, mouseStrength - 0.04);
       if (scrollRaw > 0.05 && !isHolding) {
@@ -1729,7 +1850,7 @@
       gl.uniform1f(uniforms.lock, lock);
       gl.uniform1f(uniforms.scan, scan);
       gl.uniform1f(uniforms.scroll, scrollDark);
-      gl.uniform1f(uniforms.calm, (isMobile ? 0.35 : 1.0) * (cuePassedCenter ? 0.12 : 1.0));
+      gl.uniform1f(uniforms.calm, (isMobile ? 0.35 : 1.0) * (cuePassedCenter ? 0.12 : 1.0) * settleMultiplier);
       gl.uniform1f(uniforms.scrollFrag, scroll);
       gl.uniform2f(uniforms.mouse, mouseX, mouseY);
       gl.uniform1f(uniforms.mouseStrength, mouseStrength);
