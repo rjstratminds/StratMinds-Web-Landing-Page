@@ -1578,28 +1578,21 @@
 
     function getHiddenTextColumn(x, y) {
       if (!hiddenTextHitAreas) return -1;
-      const buffer = 30;
+      const buffer = 50;
       // Check vertical bounds
       if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
-      // Calculate directly using same formula as text rendering (spreadFactor = 0.55)
+      // Simple approach: divide the center 70% of screen into 4 equal regions
       const W = window.innerWidth;
-      const spreadWidth = W * 0.55;
-      const colSpacing = spreadWidth / 3;
-      const startX = (W - spreadWidth) / 2;
-      // Column centers: startX, startX+colSpacing, startX+2*colSpacing, startX+3*colSpacing
-      // Give outer columns (Richard, Arie) more space since their names are wider
-      const boundary0 = startX - colSpacing * 0.7;  // left edge (wider)
-      const boundary1 = startX + colSpacing * 0.7;  // between col 0 and 1 (shifted right)
-      const boundary2 = startX + colSpacing * 1.5;  // between col 1 and 2
-      const boundary3 = startX + colSpacing * 2.3;  // between col 2 and 3 (shifted left)
-      const boundary4 = startX + colSpacing * 3.7;  // right edge (wider)
+      const regionWidth = W * 0.70;
+      const leftEdge = (W - regionWidth) / 2;
+      const rightEdge = leftEdge + regionWidth;
+      const quarterWidth = regionWidth / 4;
       // Check bounds
-      if (x < boundary0 - buffer || x > boundary4 + buffer) return -1;
-      // Determine column
-      if (x < boundary1) return 0;
-      if (x < boundary2) return 1;
-      if (x < boundary3) return 2;
-      return 3;
+      if (x < leftEdge - buffer || x > rightEdge + buffer) return -1;
+      // Determine column by dividing into 4 equal parts
+      const relativeX = x - leftEdge;
+      const col = Math.floor(relativeX / quarterWidth);
+      return Math.max(0, Math.min(3, col));
     }
 
     window.addEventListener('pointerup', (e) => {
