@@ -1581,20 +1581,17 @@
       const buffer = 20;
       // Check vertical bounds
       if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
-      // Find the closest column instead of first match (prevents overlap issues)
-      let closestCol = -1;
-      let closestDist = Infinity;
-      for (let i = 0; i < hiddenTextHitAreas.columns.length; i++) {
-        const col = hiddenTextHitAreas.columns[i];
-        const dist = Math.abs(x - col.x);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestCol = i;
-        }
-      }
-      // Only return if within reasonable distance of a column
-      const maxDist = (hiddenTextHitAreas.columns[1].x - hiddenTextHitAreas.columns[0].x) / 2 + buffer;
-      return closestDist <= maxDist ? closestCol : -1;
+      // Use explicit boundaries between columns for reliable detection
+      const cols = hiddenTextHitAreas.columns;
+      const colSpacing = cols[1].x - cols[0].x;
+      const leftEdge = cols[0].x - colSpacing / 2;
+      const rightEdge = cols[3].x + colSpacing / 2;
+      // Check if outside the hit area
+      if (x < leftEdge - buffer || x > rightEdge + buffer) return -1;
+      // Divide into 4 equal regions
+      const regionWidth = (rightEdge - leftEdge) / 4;
+      const col = Math.floor((x - leftEdge) / regionWidth);
+      return Math.max(0, Math.min(3, col));
     }
 
     window.addEventListener('pointerup', (e) => {
