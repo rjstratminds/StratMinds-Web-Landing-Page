@@ -12,25 +12,29 @@
         "source": "/swell",
         "destination": "https://swellsummit.com",
         "type": 302
-      }
-    ],
-    "rewrites": [
+      },
       {
         "source": "/vcard/rj",
-        "destination": "/media/vcard/Richard%20Jhang.vcf"
+        "destination": "/media/vcard/rj.vcf",
+        "type": 302
       },
       {
         "source": "/vcard/ab",
-        "destination": "/media/vcard/Anton%20Borzov.vcf"
+        "destination": "/media/vcard/ab.vcf",
+        "type": 302
       },
       {
         "source": "/vcard/sk",
-        "destination": "/media/vcard/Summer%20Kim.vcf"
+        "destination": "/media/vcard/sk.vcf",
+        "type": 302
       },
       {
         "source": "/vcard/af",
-        "destination": "/media/vcard/Ari%C3%A9%20Fisher.vcf"
-      },
+        "destination": "/media/vcard/af.vcf",
+        "type": 302
+      }
+    ],
+    "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
