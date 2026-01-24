@@ -1578,20 +1578,28 @@
 
     function getHiddenTextColumn(x, y) {
       if (!hiddenTextHitAreas) return -1;
-      const buffer = 20;
+      const buffer = 30;
       // Check vertical bounds
       if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
-      // Use explicit boundaries between columns for reliable detection
-      const cols = hiddenTextHitAreas.columns;
-      const colSpacing = cols[1].x - cols[0].x;
-      const leftEdge = cols[0].x - colSpacing / 2;
-      const rightEdge = cols[3].x + colSpacing / 2;
-      // Check if outside the hit area
-      if (x < leftEdge - buffer || x > rightEdge + buffer) return -1;
-      // Divide into 4 equal regions
-      const regionWidth = (rightEdge - leftEdge) / 4;
-      const col = Math.floor((x - leftEdge) / regionWidth);
-      return Math.max(0, Math.min(3, col));
+      // Calculate directly using same formula as text rendering (spreadFactor = 0.55)
+      const W = window.innerWidth;
+      const spreadWidth = W * 0.55;
+      const colSpacing = spreadWidth / 3;
+      const startX = (W - spreadWidth) / 2;
+      // Column centers: startX, startX+colSpacing, startX+2*colSpacing, startX+3*colSpacing
+      // Region boundaries are midpoints between column centers
+      const boundary0 = startX - colSpacing / 2;  // left edge
+      const boundary1 = startX + colSpacing / 2;  // between col 0 and 1
+      const boundary2 = startX + colSpacing * 1.5;  // between col 1 and 2
+      const boundary3 = startX + colSpacing * 2.5;  // between col 2 and 3
+      const boundary4 = startX + colSpacing * 3.5;  // right edge
+      // Check bounds
+      if (x < boundary0 - buffer || x > boundary4 + buffer) return -1;
+      // Determine column
+      if (x < boundary1) return 0;
+      if (x < boundary2) return 1;
+      if (x < boundary3) return 2;
+      return 3;
     }
 
     window.addEventListener('pointerup', (e) => {
