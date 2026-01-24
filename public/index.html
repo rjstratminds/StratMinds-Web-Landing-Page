@@ -1581,33 +1581,55 @@
     ];
 
     function getHiddenTextColumn(x, y) {
-      // Simple approach: divide the center 70% of screen into 4 equal regions
-      // Skip strict bounds checks on mobile for better reliability
-      const W = window.innerWidth;
       const H = window.innerHeight;
       const buffer = isMobile ? 100 : 50;
 
-      // Vertical check - be very lenient, just check if in upper portion of screen
-      if (!isMobile && hiddenTextHitAreas) {
-        if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
-      } else {
-        // On mobile, just check if tap is in upper 60% of screen
-        if (y > H * 0.6) return -1;
+      // Vertical check - lenient
+      if (y > H * 0.6) return -1;
+
+      // Use actual column positions from hiddenTextHitAreas if available
+      if (hiddenTextHitAreas && hiddenTextHitAreas.columns && hiddenTextHitAreas.columns.length === 4) {
+        const cols = hiddenTextHitAreas.columns;
+        // Find which column the x position is closest to
+        let bestCol = -1;
+        let bestDist = Infinity;
+        for (let i = 0; i < 4; i++) {
+          const dist = Math.abs(x - cols[i].x);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestCol = i;
+          }
+        }
+        // Check if within reasonable range (half the spacing between columns)
+        const colSpacing = cols[1].x - cols[0].x;
+        if (bestDist < colSpacing * 0.6 + buffer) {
+          return bestCol;
+        }
+        return -1;
       }
 
-      // Horizontal detection
-      const regionWidth = W * 0.70;
-      const leftEdge = (W - regionWidth) / 2;
-      const rightEdge = leftEdge + regionWidth;
-      const quarterWidth = regionWidth / 4;
+      // Fallback: use 55% spread factor (matches text rendering)
+      const W = window.innerWidth;
+      const spreadWidth = W * 0.55;
+      const colSpacing = spreadWidth / 3;
+      const startX = (W - spreadWidth) / 2;
+      const col0 = startX;
+      const col3 = startX + 3 * colSpacing;
 
-      // Check horizontal bounds
-      if (x < leftEdge - buffer || x > rightEdge + buffer) return -1;
+      if (x < col0 - colSpacing / 2 - buffer || x > col3 + colSpacing / 2 + buffer) return -1;
 
-      // Determine column by dividing into 4 equal parts
-      const relativeX = x - leftEdge;
-      const col = Math.floor(relativeX / quarterWidth);
-      return Math.max(0, Math.min(3, col));
+      // Find closest column
+      const cols = [col0, col0 + colSpacing, col0 + 2 * colSpacing, col3];
+      let bestCol = 0;
+      let bestDist = Math.abs(x - cols[0]);
+      for (let i = 1; i < 4; i++) {
+        const dist = Math.abs(x - cols[i]);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestCol = i;
+        }
+      }
+      return bestCol;
     }
 
     window.addEventListener('pointerup', (e) => {
