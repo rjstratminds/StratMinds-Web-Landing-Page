@@ -1,0 +1,17 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//macOS 13.0.1//EN
+N:Kim;Summer;;;
+FN:Summer Kim
+ORG:STRΛTMINDS;
+TITLE:Partner\, UX Fund
+EMAIL;type=INTERNET;type=WORK;type=pref:sk@stratminds.vc
+TEL;type=IPHONE;type=CELL;type=VOICE;type=pref:+1 (650) 505-9924
+ADR;type=WORK;type=pref:;;595 Pacific Ave FL4;San Francisco;CA;94133;United States
+item1.URL;type=pref:https://stratminds.vc
+item1.X-ABLabel:Website
+item2.URL:https://t.me/skimLatte
+item2.X-ABLabel:Telegram
+item3.URL:https://linkedin.com/in/skim725
+item3.X-ABLabel:LinkedIn
+END:VCARD

@@ -3,7 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StratMinds Intro</title>
+
+  <!-- SEO Meta Tags -->
+  <title>StratMinds VC | Applied AI</title>
+  <meta name="description" content="StratMinds VC - Investing in the future of Applied AI. We partner with visionary founders building AI-powered solutions." />
+  <meta name="keywords" content="StratMinds, venture capital, AI, applied AI, artificial intelligence, VC, investment" />
+
+  <!-- Open Graph / Facebook / iMessage / WhatsApp -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://stratminds.vc/" />
+  <meta property="og:title" content="StratMinds VC | Applied AI" />
+  <meta property="og:description" content="Investing in the future of Applied AI. We partner with visionary founders building AI-powered solutions." />
+  <meta property="og:image" content="https://stratminds.vc/og-image.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://stratminds.vc/" />
+  <meta name="twitter:title" content="StratMinds VC | Applied AI" />
+  <meta name="twitter:description" content="Investing in the future of Applied AI. We partner with visionary founders building AI-powered solutions." />
+  <meta name="twitter:image" content="https://stratminds.vc/og-image.png" />
+
+  <!-- Canonical URL (consolidates SEO for www and non-www) -->
+  <link rel="canonical" href="https://stratminds.vc/" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -174,11 +195,13 @@
       border-radius: 16px;
       padding: 16px;
     }
-    .video-modal video {
+    .video-modal video,
+    .video-modal iframe {
       width: 100%;
-      height: auto;
+      aspect-ratio: 16 / 9;
       border-radius: 12px;
       display: block;
+      border: none;
     }
     .video-modal__close {
       display: block;
@@ -436,6 +459,7 @@
         <div class="contact" aria-label="Contact links">
       <a href="mailto:hello@stratminds.vc" aria-label="Email StratMinds" data-ui="true">email.</a>
       <a href="https://www.linkedin.com/company/stratminds-vc" target="_blank" rel="noopener noreferrer" aria-label="StratMinds on LinkedIn" data-ui="true">linkedIn.</a>
+      <a href="https://swellai.events" target="_blank" rel="noopener noreferrer" aria-label="Swell 2026" data-ui="true">swell.</a>
       <a href="https://portal.stratminds.vc/research" target="_blank" rel="noopener noreferrer" aria-label="StratMinds Research Portal" class="portal" data-ui="true">portal.</a>
     </div>
     <div class="intro-cue" aria-hidden="true"><svg viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg"><polygon points="7,12 0,0 14,0"/></svg></div>
@@ -458,13 +482,13 @@
         <p>User Experience (UX) invests in AI-native products with intuitive, delightful UX for both human–machine and machine–machine interactions, unlocking real-world adoption and scalable growth.</p>
 
         <div class="video-grid" aria-label="Featured videos">
-          <button class="video-card" data-video="media/video/Intro to StratMinds v3.1b.mp4" aria-label="Play Intro to StratMinds" data-ui="true">
+          <button class="video-card" data-video="https://www.youtube.com/embed/HzvaneMoAIc?autoplay=1" aria-label="Play Intro to StratMinds" data-ui="true">
             <div class="video-thumb">
               <img src="media/video/Intro to StratMinds v3.1b icon.jpg" alt="Intro to StratMinds" />
             </div>
             <div class="video-title">Intro to StratMinds</div>
           </button>
-          <button class="video-card" data-video="media/video/StratMinds UX fund thesis.mp4" aria-label="Play Our Thesis: UX for AI" data-ui="true">
+          <button class="video-card" data-video="https://www.youtube.com/embed/gnlu8T1H0Js?autoplay=1" aria-label="Play Our Thesis: UX for AI" data-ui="true">
             <div class="video-thumb">
               <img src="media/video/StratMinds UX fund thesis icon.jpg" alt="Our Thesis: UX for AI" />
             </div>
@@ -733,8 +757,8 @@
       float d = length(uv);
       float coreBase = smoothstep(0.32, 0.08, d);
       float haloBase = smoothstep(0.56, 0.14, d) * 0.12;
-      float coreHidden = smoothstep(0.1, 0.0, d);
-      float haloHidden = smoothstep(0.18, 0.02, d) * 0.01;
+      float coreHidden = smoothstep(0.06, 0.0, d);
+      float haloHidden = smoothstep(0.12, 0.01, d) * 0.008;
       float core = mix(coreBase, coreHidden, vHidden);
       float halo = mix(haloBase, haloHidden, vHidden);
       float alpha = mix(core, halo, uPass);
@@ -1171,34 +1195,44 @@
       layers.main = createLayer(targets, seeds, tones, targets);
 
       const hiddenSpreadFactor = 0.55;
+      // Calculate hidden text center based on actual logo rect position
+      // Must account for scale and factor used in buildColumnsTextPoints
+      const hiddenScale = 1.1;
+      const rawW = canvas.width * hiddenScale;
+      const rawH = canvas.height * hiddenScale;
+      const maxDim = 1600;
+      const hiddenFactor = Math.min(1, maxDim / Math.max(rawW, rawH));
+      const logoCssCenterY = logoRectCss ? (logoRectCss.y + logoRectCss.h / 2) : (window.innerHeight / 2);
+      const hiddenYPx = logoCssCenterY * dpr * hiddenScale * hiddenFactor;
       const hiddenPoints = buildColumnsTextPoints(canvas.width, canvas.height, ['Richard\nJhang', 'Anton\nBorzov', 'Summer\nKim', 'Arie\nFisher'], {
         sizeFactor: isMobile ? 0.047 : 0.057,
         weight: 900,
         font: 'Arial Black, Arial, Helvetica, sans-serif',
         lineHeight: 1.12,
-        stepDiv: isMobile ? 180000 : 240000,
+        stepDiv: isMobile ? 280000 : 380000,
         spreadFactor: hiddenSpreadFactor,
-        yPx: logoCenterCanvas ?? (canvas.height * 0.5)
+        yPx: hiddenYPx
       });
       // Calculate hit areas for each column in screen coordinates
+      // Use the same positioning formula as buildColumnsTextPoints for accurate alignment
       const hiddenBounds = computeBoundsFromPoints(hiddenPoints);
       const screenTop = (1 - (hiddenBounds.topNdc + 1) * 0.5) * window.innerHeight;
       const screenBottom = (1 - (hiddenBounds.bottomNdc + 1) * 0.5) * window.innerHeight;
-      const screenLeft = ((hiddenBounds.leftNdc + 1) * 0.5) * window.innerWidth;
-      const screenRight = ((hiddenBounds.rightNdc + 1) * 0.5) * window.innerWidth;
-      const totalWidth = screenRight - screenLeft;
-      const colSpacing = totalWidth / 3;
+      // Calculate column centers directly (matching buildColumnsTextPoints layout)
+      const spreadWidth = window.innerWidth * hiddenSpreadFactor;
+      const colSpacing = spreadWidth / 3;
+      const startX = (window.innerWidth - spreadWidth) / 2;
       hiddenTextHitAreas = {
         top: screenTop,
         bottom: screenBottom,
         columns: [
-          { x: screenLeft, w: colSpacing * 0.7 },
-          { x: screenLeft + colSpacing, w: colSpacing * 0.7 },
-          { x: screenLeft + colSpacing * 2, w: colSpacing * 0.7 },
-          { x: screenRight, w: colSpacing * 0.7 }
+          { x: startX, w: colSpacing * 0.8 },
+          { x: startX + colSpacing, w: colSpacing * 0.8 },
+          { x: startX + colSpacing * 2, w: colSpacing * 0.8 },
+          { x: startX + colSpacing * 3, w: colSpacing * 0.8 }
         ]
       };
-      const hiddenCount = Math.min(isMobile ? 1400000 : 2100000, hiddenPoints.length * (isMobile ? 18 : 20));
+      const hiddenCount = Math.min(isMobile ? 1800000 : 2800000, hiddenPoints.length * (isMobile ? 24 : 28));
       const hiddenTargets = new Float32Array(hiddenCount * 3);
       const hiddenSeeds = new Float32Array(hiddenCount);
       const hiddenTones = new Float32Array(hiddenCount);
@@ -1544,19 +1578,23 @@
 
     function getHiddenTextColumn(x, y) {
       if (!hiddenTextHitAreas) return -1;
-      const buffer = 10;
-      const verticalOffset = 40;
-      // Check vertical bounds (shifted down)
-      if (y < hiddenTextHitAreas.top - buffer + verticalOffset || y > hiddenTextHitAreas.bottom + buffer + verticalOffset) return -1;
-      // Check each column
+      const buffer = 20;
+      // Check vertical bounds
+      if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
+      // Find the closest column instead of first match (prevents overlap issues)
+      let closestCol = -1;
+      let closestDist = Infinity;
       for (let i = 0; i < hiddenTextHitAreas.columns.length; i++) {
         const col = hiddenTextHitAreas.columns[i];
-        const halfW = col.w / 2 + buffer;
-        if (x >= col.x - halfW && x <= col.x + halfW) {
-          return i;
+        const dist = Math.abs(x - col.x);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestCol = i;
         }
       }
-      return -1;
+      // Only return if within reasonable distance of a column
+      const maxDist = (hiddenTextHitAreas.columns[1].x - hiddenTextHitAreas.columns[0].x) / 2 + buffer;
+      return closestDist <= maxDist ? closestCol : -1;
     }
 
     window.addEventListener('pointerup', (e) => {
@@ -1648,13 +1686,11 @@
       videoPlayer.src = src;
       videoModal.classList.add('is-open');
       videoModal.setAttribute('aria-hidden', 'false');
-      videoPlayer.play().catch(() => {});
     }
 
     function closeVideo() {
       if (!videoModal || !videoPlayer) return;
-      videoPlayer.pause();
-      videoPlayer.removeAttribute('src');
+      videoPlayer.src = '';
       videoModal.classList.remove('is-open');
       videoModal.setAttribute('aria-hidden', 'true');
     }
@@ -1997,7 +2033,7 @@
   <div class="video-modal" id="videoModal" aria-hidden="true">
     <div class="video-modal__panel">
       <button class="video-modal__close" type="button" id="videoClose" data-ui="true">Close</button>
-      <video id="videoPlayer" playsinline controls></video>
+      <iframe id="videoPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
   </div>
 

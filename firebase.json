@@ -7,7 +7,30 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      {
+        "source": "/swell",
+        "destination": "https://swellai.events",
+        "type": 302
+      }
+    ],
     "rewrites": [
+      {
+        "source": "/vcard/rj",
+        "destination": "/media/vcard/Richard%20Jhang.vcf"
+      },
+      {
+        "source": "/vcard/ab",
+        "destination": "/media/vcard/Anton%20Borzov.vcf"
+      },
+      {
+        "source": "/vcard/sk",
+        "destination": "/media/vcard/Summer%20Kim.vcf"
+      },
+      {
+        "source": "/vcard/af",
+        "destination": "/media/vcard/Ari%C3%A9%20Fisher.vcf"
+      },
       {
         "source": "**",
         "destination": "/index.html"
