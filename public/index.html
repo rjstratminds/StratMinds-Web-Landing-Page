@@ -1587,12 +1587,12 @@
       const colSpacing = spreadWidth / 3;
       const startX = (W - spreadWidth) / 2;
       // Column centers: startX, startX+colSpacing, startX+2*colSpacing, startX+3*colSpacing
-      // Region boundaries are midpoints between column centers
-      const boundary0 = startX - colSpacing / 2;  // left edge
-      const boundary1 = startX + colSpacing / 2;  // between col 0 and 1
+      // Give outer columns (Richard, Arie) more space since their names are wider
+      const boundary0 = startX - colSpacing * 0.7;  // left edge (wider)
+      const boundary1 = startX + colSpacing * 0.7;  // between col 0 and 1 (shifted right)
       const boundary2 = startX + colSpacing * 1.5;  // between col 1 and 2
-      const boundary3 = startX + colSpacing * 2.5;  // between col 2 and 3
-      const boundary4 = startX + colSpacing * 3.5;  // right edge
+      const boundary3 = startX + colSpacing * 2.3;  // between col 2 and 3 (shifted left)
+      const boundary4 = startX + colSpacing * 3.7;  // right edge (wider)
       // Check bounds
       if (x < boundary0 - buffer || x > boundary4 + buffer) return -1;
       // Determine column
