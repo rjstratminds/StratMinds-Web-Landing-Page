@@ -10,7 +10,7 @@
     "redirects": [
       {
         "source": "/swell",
-        "destination": "https://swellai.events",
+        "destination": "https://swellsummit.com",
         "type": 302
       }
     ],
