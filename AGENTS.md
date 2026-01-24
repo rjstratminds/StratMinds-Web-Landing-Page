@@ -13,9 +13,14 @@
 
 ## Recent Updates (Jan 2026)
 
+### Favicon
+- Updated to black/white PNG version (`favicon.png`)
+- Used for both standard favicon and Apple touch icon
+
 ### Hidden Text Interactive LinkedIn Links
 - **Hidden Text**: Displays team names (Richard Jhang, Anton Borzov, Summer Kim, Arie Fisher) in 4 columns when holding/pressing on logo area.
-- **Interactive**: Hold for 600ms+ to reveal names, release over a name to open their LinkedIn profile.
+- **Two-step interaction**: Hold to reveal names, then click/tap on a name to open LinkedIn (prevents accidental navigation).
+- **Ripple behavior**: Fixed ripple staying open after maximizing hold duration.
 - **Hit Detection**: Uses computed bounds from actual particle positions, converted to screen coordinates with 10px buffer and 40px vertical offset.
 - **LinkedIn URLs**:
   - Richard Jhang → linkedin.com/in/richardjhang/
