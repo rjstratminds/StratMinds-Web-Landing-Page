@@ -880,6 +880,8 @@
     let holdY = 0.0;
     let holdReleaseTime = 0;
     let holdReleaseStrength = 0;
+    let tapRevealTime = 0;  // For single-tap reveal on mobile
+    const tapRevealDuration = 3500;  // Names stay visible for 3.5 seconds
     const MAX_RIPPLES = 8;
     const rippleLife = 2.0;
     const ripples = [];
@@ -1607,25 +1609,45 @@
         whooshActive = false;
       }
       const holdDuration = performance.now() - holdStart;
-      holdReleaseTime = performance.now();
+      const now = performance.now();
+      holdReleaseTime = now;
       holdReleaseStrength = Math.min(1.0, holdDuration / 900);
       isHolding = false;
       addRipple(e.clientX, e.clientY);
 
-      // If held long enough to reveal hidden text, check for LinkedIn tap
-      // Use holdX/holdY (from pointerdown) for more reliable mobile detection
-      // Lower threshold for mobile (400ms vs 600ms)
-      const holdThreshold = isMobile ? 400 : 600;
-      if (holdDuration > holdThreshold) {
-        const col = getHiddenTextColumn(holdX, holdY);
+      const inLogoArea = e.clientY < window.innerHeight * 0.6;
+      const namesRevealed = tapRevealTime > 0 && (now - tapRevealTime) < tapRevealDuration;
+
+      // If names are already revealed, check if tapping on a name
+      if (namesRevealed && inLogoArea) {
+        const col = getHiddenTextColumn(e.clientX, e.clientY);
         if (col >= 0 && col < teamLinkedIn.length) {
-          // Use location.href for mobile compatibility (window.open gets blocked)
           if (isMobile) {
             window.location.href = teamLinkedIn[col];
           } else {
             window.open(teamLinkedIn[col], '_blank');
           }
+          return;
         }
+      }
+
+      // Desktop: use hold gesture
+      if (!isMobile) {
+        const holdThreshold = 600;
+        if (holdDuration > holdThreshold) {
+          const col = getHiddenTextColumn(holdX, holdY);
+          if (col >= 0 && col < teamLinkedIn.length) {
+            window.open(teamLinkedIn[col], '_blank');
+          }
+        }
+        return;
+      }
+
+      // Mobile: tap in logo area to reveal names
+      if (inLogoArea && holdDuration < 300) {
+        tapRevealTime = now;
+        holdX = e.clientX;
+        holdY = e.clientY;
       }
     }, { passive: true });
 
@@ -1853,6 +1875,18 @@
       if (isHolding) {
         holdStrength = Math.min(1.0, (now - holdStart) / 900);
         holdPos = toNdc(holdX, holdY);
+      } else if (tapRevealTime > 0) {
+        // Mobile tap reveal - show names for tapRevealDuration
+        const elapsed = now - tapRevealTime;
+        if (elapsed < tapRevealDuration) {
+          // Quick fade in, then stay visible, then fade out
+          const fadeIn = Math.min(1.0, elapsed / 300);
+          const fadeOut = elapsed > (tapRevealDuration - 500) ? 1 - (elapsed - (tapRevealDuration - 500)) / 500 : 1.0;
+          holdStrength = fadeIn * fadeOut;
+          holdPos = toNdc(holdX, holdY);
+        } else {
+          tapRevealTime = 0;
+        }
       } else if (holdReleaseTime > 0) {
         const elapsed = (now - holdReleaseTime) / 1000;
         const closeDuration = 1.7;
