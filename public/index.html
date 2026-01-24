@@ -1617,10 +1617,17 @@
       addRipple(e.clientX, e.clientY);
 
       // If held long enough to reveal hidden text, check for LinkedIn tap
+      // Use holdX/holdY (from pointerdown) for more reliable mobile detection
       if (holdDuration > 600) {
-        const col = getHiddenTextColumn(e.clientX, e.clientY);
+        const col = getHiddenTextColumn(holdX, holdY);
         if (col >= 0 && col < teamLinkedIn.length) {
-          window.open(teamLinkedIn[col], '_blank');
+          // Use location.href for mobile compatibility (window.open gets blocked)
+          const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          if (isMobileDevice) {
+            window.location.href = teamLinkedIn[col];
+          } else {
+            window.open(teamLinkedIn[col], '_blank');
+          }
         }
       }
     }, { passive: true });
