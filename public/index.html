@@ -1590,13 +1590,11 @@
       // Horizontal check - must be in center region (15% to 85%)
       if (x < W * 0.15 || x > W * 0.85) return -1;
 
-      // Simple fixed percentage boundaries based on 55% spread factor math:
-      // Column centers: 22.5%, 40.83%, 59.17%, 77.5%
-      // Boundaries at midpoints: 31.67%, 50%, 68.33%
+      // Fixed percentage boundaries based on observed text positions:
       const pct = x / W;
-      if (pct < 0.317) return 0;  // Richard
+      if (pct < 0.40) return 0;   // Richard
       if (pct < 0.50) return 1;   // Anton
-      if (pct < 0.683) return 2;  // Summer
+      if (pct < 0.60) return 2;   // Summer
       return 3;                    // Arie
     }
 
