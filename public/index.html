@@ -1577,18 +1577,29 @@
     ];
 
     function getHiddenTextColumn(x, y) {
-      if (!hiddenTextHitAreas) return -1;
-      const buffer = 50;
-      // Check vertical bounds
-      if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
       // Simple approach: divide the center 70% of screen into 4 equal regions
+      // Skip strict bounds checks on mobile for better reliability
       const W = window.innerWidth;
+      const H = window.innerHeight;
+      const buffer = isMobile ? 100 : 50;
+
+      // Vertical check - be very lenient, just check if in upper portion of screen
+      if (!isMobile && hiddenTextHitAreas) {
+        if (y < hiddenTextHitAreas.top - buffer || y > hiddenTextHitAreas.bottom + buffer) return -1;
+      } else {
+        // On mobile, just check if tap is in upper 60% of screen
+        if (y > H * 0.6) return -1;
+      }
+
+      // Horizontal detection
       const regionWidth = W * 0.70;
       const leftEdge = (W - regionWidth) / 2;
       const rightEdge = leftEdge + regionWidth;
       const quarterWidth = regionWidth / 4;
-      // Check bounds
+
+      // Check horizontal bounds
       if (x < leftEdge - buffer || x > rightEdge + buffer) return -1;
+
       // Determine column by dividing into 4 equal parts
       const relativeX = x - leftEdge;
       const col = Math.floor(relativeX / quarterWidth);
@@ -1611,12 +1622,13 @@
 
       // If held long enough to reveal hidden text, check for LinkedIn tap
       // Use holdX/holdY (from pointerdown) for more reliable mobile detection
-      if (holdDuration > 600) {
+      // Lower threshold for mobile (400ms vs 600ms)
+      const holdThreshold = isMobile ? 400 : 600;
+      if (holdDuration > holdThreshold) {
         const col = getHiddenTextColumn(holdX, holdY);
         if (col >= 0 && col < teamLinkedIn.length) {
           // Use location.href for mobile compatibility (window.open gets blocked)
-          const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-          if (isMobileDevice) {
+          if (isMobile) {
             window.location.href = teamLinkedIn[col];
           } else {
             window.open(teamLinkedIn[col], '_blank');
