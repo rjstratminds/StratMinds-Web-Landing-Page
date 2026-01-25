@@ -323,8 +323,8 @@
       for (const p of stars) {
         p.age += dt;
 
-        // Speed increases with age (acceleration toward viewer) - 50% slower
-        const speed = p.v0 * (0.15 + p.age * 0.4);
+        // Speed increases with age (acceleration toward viewer) - 80% slower total
+        const speed = p.v0 * (0.06 + p.age * 0.16);
         p.x += p.dirX * speed * dt;
         p.y += p.dirY * speed * dt;
 
