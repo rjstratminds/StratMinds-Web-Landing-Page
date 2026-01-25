@@ -243,7 +243,7 @@
         <p class="member-bio">First product designer/leader at @WhatsApp and @Neeva. Added over 1.8 billion users in his career. 15+ years of building and supporting global design teams. 25 years in UX, product, and design. Prolific angel investor. M.Sc.</p>
         <p class="member-expertise">Expert in AI apps / SaaS, product design, UX, 0-to-1 scale-up</p>
       </div>
-      <div class="team-member" data-hobby="Media">
+      <div class="team-member" data-hobby="Pilates">
         <a href="https://www.linkedin.com/in/skim725/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/summer-kim.png" alt="Summer Kim" class="profile-photo" />
         </a>
@@ -726,29 +726,29 @@
 
     function generateTextParticles(word, rect) {
       const tempCanvas = document.createElement('canvas');
-      const size = 120;
-      tempCanvas.width = size * 2.5;
-      tempCanvas.height = size * 0.6;
+      const size = 300; // 5x higher resolution
+      tempCanvas.width = size * 2;
+      tempCanvas.height = size * 0.5;
       const ctx = tempCanvas.getContext('2d');
 
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '900 36px Arial Black, Arial';
+      ctx.font = '400 72px Avenir, "Avenir Next", Arial, sans-serif'; // Not bold (400 weight)
       ctx.fillText(word, tempCanvas.width / 2, tempCanvas.height / 2);
 
       const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
       const particles = [];
-      const scale = rect.width * 0.9;
+      const scale = rect.width * 0.85;
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Higher density sampling for sharper text
+      // Very high density sampling for sharp text
       for (let y = 0; y < tempCanvas.height; y += 1) {
         for (let x = 0; x < tempCanvas.width; x += 1) {
-          if (imageData[(y * tempCanvas.width + x) * 4] > 100) {
+          if (imageData[(y * tempCanvas.width + x) * 4] > 120) {
             const px = centerX + ((x / tempCanvas.width) - 0.5) * scale;
-            const py = centerY + ((y / tempCanvas.height) - 0.5) * scale * 0.35;
+            const py = centerY + ((y / tempCanvas.height) - 0.5) * scale * 0.28;
             particles.push({
               x: px,
               y: py,
@@ -869,11 +869,11 @@
         const py = p.baseY + Math.sin(angle) * wave;
 
         // Alpha based on hold strength
-        const alpha = holdStrength * 0.95;
+        const alpha = holdStrength * 0.92;
 
-        // Smaller, sharper particles
+        // Very small particles for sharp text
         textCtx.beginPath();
-        textCtx.arc(px, py, 0.8, 0, Math.PI * 2);
+        textCtx.arc(px, py, 0.45, 0, Math.PI * 2);
         textCtx.fillStyle = `rgba(59, 226, 140, ${alpha.toFixed(3)})`;
         textCtx.fill();
       }
