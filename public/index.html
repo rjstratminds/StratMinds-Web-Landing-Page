@@ -1715,7 +1715,16 @@
 
     const soundToggle = document.getElementById('soundToggle');
     if (soundToggle) {
-      soundToggle.textContent = 'Sound Off';
+      // Check localStorage for sound state from other pages
+      if (localStorage.getItem('soundEnabled') === '1') {
+        audioEnabled = true;
+        soundToggle.textContent = 'Sound On';
+        bgAudio.play().catch(() => {});
+        initWhoosh();
+      } else {
+        soundToggle.textContent = 'Sound Off';
+      }
+
       soundToggle.addEventListener('click', () => {
         audioEnabled = !audioEnabled;
         localStorage.setItem('soundEnabled', audioEnabled ? '1' : '0');
@@ -1741,6 +1750,7 @@
     const videoCards = document.querySelectorAll('.video-card');
     function stopSiteAudio() {
       audioEnabled = false;
+      localStorage.setItem('soundEnabled', '0');
       bgAudio.pause();
       bgAudio.currentTime = 0;
       warpAudio.pause();
