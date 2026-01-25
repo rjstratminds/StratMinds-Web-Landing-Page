@@ -14,7 +14,6 @@
       --muted: rgba(255, 255, 255, 0.7);
       --soft: rgba(255, 255, 255, 0.5);
       --accent: #3be28c;
-      --linkedin: #0a66c2;
     }
     html, body { width: 100%; height: 100%; background: #000; }
     body {
@@ -22,22 +21,27 @@
       color: var(--ink);
       overflow-x: hidden;
     }
-    #glCanvas {
+    #warpCanvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       z-index: 0;
-      pointer-events: auto;
+      pointer-events: none;
     }
-    .page-content {
-      position: relative;
+    #glCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       z-index: 1;
       pointer-events: none;
     }
-    .page-content a, .page-content button {
-      pointer-events: auto;
+    .page-content {
+      position: relative;
+      z-index: 2;
     }
     .back-link {
       position: fixed;
@@ -117,7 +121,6 @@
       position: relative;
       max-width: 220px;
       margin: 0 auto;
-      pointer-events: auto;
     }
     .profile-link {
       display: block;
@@ -182,6 +185,7 @@
   </style>
 </head>
 <body>
+  <canvas id="warpCanvas"></canvas>
   <canvas id="glCanvas"></canvas>
   <div class="page-content">
   <a href="index.html" class="back-link" data-ui="true">Back</a>
@@ -261,57 +265,115 @@
   </div>
 
   <script>
-    const canvas = document.getElementById('glCanvas');
-    const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
+    // ===== WARP STARS (2D Canvas - stars flying toward viewer) =====
+    const warpCanvas = document.getElementById('warpCanvas');
+    const warpCtx = warpCanvas.getContext('2d');
 
-    if (!gl) {
-      document.body.style.background = '#000';
-      throw new Error('WebGL2 not supported');
+    function resizeWarp() {
+      warpCanvas.width = window.innerWidth;
+      warpCanvas.height = window.innerHeight;
+    }
+    resizeWarp();
+    window.addEventListener('resize', resizeWarp);
+
+    const warpCenter = { x: 0, y: 0 };
+    const warpStars = [];
+    const WARP_STAR_COUNT = 180;
+
+    function initWarpStars() {
+      warpCenter.x = warpCanvas.width / 2;
+      warpCenter.y = warpCanvas.height / 2;
+      warpStars.length = 0;
+      for (let i = 0; i < WARP_STAR_COUNT; i++) {
+        warpStars.push(createWarpStar());
+      }
     }
 
-    // Audio state
-    let audioEnabled = false;
-    let whooshCtx = null;
-    let whooshGain = null;
-    let whooshBuffer = null;
-    let whooshBufferRev = null;
-    let whooshLoading = false;
+    function createWarpStar() {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 100;
+      const x = warpCenter.x + Math.cos(angle) * dist;
+      const y = warpCenter.y + Math.sin(angle) * dist;
+      const dx = Math.cos(angle);
+      const dy = Math.sin(angle);
+      return {
+        x, y, dx, dy,
+        speed: 30 + Math.random() * 60,
+        alpha: 0.3 + Math.random() * 0.5,
+        size: 0.5 + Math.random() * 1.5
+      };
+    }
 
-    // Background audio
+    function updateWarpStars(dt) {
+      warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
+      const maxDist = Math.max(warpCanvas.width, warpCanvas.height);
+
+      for (const star of warpStars) {
+        // Move outward from center
+        star.x += star.dx * star.speed * dt;
+        star.y += star.dy * star.speed * dt;
+
+        // Distance from center for trail length
+        const distFromCenter = Math.hypot(star.x - warpCenter.x, star.y - warpCenter.y);
+        const distRatio = Math.min(1, distFromCenter / (maxDist * 0.5));
+
+        // Trail grows as star moves outward
+        const trailLength = 2 + distRatio * 20;
+        const brightness = star.alpha * (0.4 + distRatio * 0.6);
+
+        // Draw star trail
+        warpCtx.strokeStyle = `rgba(255, 255, 255, ${brightness.toFixed(3)})`;
+        warpCtx.lineWidth = star.size;
+        warpCtx.beginPath();
+        warpCtx.moveTo(star.x - star.dx * trailLength, star.y - star.dy * trailLength);
+        warpCtx.lineTo(star.x, star.y);
+        warpCtx.stroke();
+
+        // Reset if out of bounds
+        if (star.x < -50 || star.x > warpCanvas.width + 50 ||
+            star.y < -50 || star.y > warpCanvas.height + 50) {
+          Object.assign(star, createWarpStar());
+        }
+      }
+    }
+
+    initWarpStars();
+
+    // ===== WEBGL (hidden text particles only) =====
+    const glCanvas = document.getElementById('glCanvas');
+    const gl = glCanvas.getContext('webgl2', { antialias: false, alpha: true, premultipliedAlpha: false });
+
+    if (!gl) {
+      console.warn('WebGL2 not supported');
+    }
+
+    // Audio
+    let audioEnabled = false;
     const bgAudio = new Audio('media/audio/Background.Hyperspace - Calm and Ethereal Atmosphere.mp3');
     bgAudio.loop = true;
-    bgAudio.preload = 'metadata';
     bgAudio.volume = 0.252;
+
+    let whooshCtx = null;
+    let whooshBuffer = null;
+    let whooshBufferRev = null;
 
     const soundToggle = document.getElementById('soundToggle');
     soundToggle.addEventListener('click', () => {
       audioEnabled = !audioEnabled;
       soundToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
       if (audioEnabled) {
-        bgAudio.currentTime = 0;
         bgAudio.play().catch(() => {});
         initWhoosh();
       } else {
         bgAudio.pause();
-        bgAudio.currentTime = 0;
       }
     });
 
     function initWhoosh() {
       if (whooshCtx) return;
       whooshCtx = new (window.AudioContext || window.webkitAudioContext)();
-      whooshGain = whooshCtx.createGain();
-      whooshGain.gain.value = 1.0;
-      whooshGain.connect(whooshCtx.destination);
-      loadWhooshBuffer();
-    }
-
-    function loadWhooshBuffer() {
-      if (whooshBuffer || whooshLoading || !whooshCtx) return;
-      whooshLoading = true;
-      const url = 'media/audio/Alien take off whoosh.mp3';
-      fetch(url)
-        .then(res => res.arrayBuffer())
+      fetch('media/audio/Alien take off whoosh.mp3')
+        .then(r => r.arrayBuffer())
         .then(buf => whooshCtx.decodeAudioData(buf))
         .then(decoded => {
           whooshBuffer = decoded;
@@ -319,237 +381,138 @@
           for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
             const src = decoded.getChannelData(ch);
             const dst = rev.getChannelData(ch);
-            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) {
-              dst[i] = src[j];
-            }
+            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) dst[i] = src[j];
           }
           whooshBufferRev = rev;
-          whooshLoading = false;
-        })
-        .catch(() => { whooshLoading = false; });
+        });
     }
 
-    function playWhoosh(reverse = false) {
+    function playWhoosh(reverse) {
       if (!audioEnabled || !whooshCtx || !whooshBuffer) return;
       if (whooshCtx.state === 'suspended') whooshCtx.resume();
-      const buffer = reverse ? whooshBufferRev : whooshBuffer;
-      if (!buffer) return;
       const src = whooshCtx.createBufferSource();
-      src.buffer = buffer;
-      src.connect(whooshGain);
+      src.buffer = reverse ? whooshBufferRev : whooshBuffer;
+      src.connect(whooshCtx.destination);
       src.start();
     }
 
-    // WebGL shaders
+    // WebGL shaders for text particles
     const vertexSrc = `#version 300 es
     precision highp float;
-    const int MAX_RIPPLES = 8;
-    layout(location = 0) in vec3 aPosition;
+    layout(location = 0) in vec2 aPosition;
     layout(location = 1) in float aSeed;
-    layout(location = 2) in float aTone;
-    layout(location = 3) in float aLayer;
-
     uniform float uTime;
-    uniform vec2 uMouse;
-    uniform float uMouseStrength;
     uniform vec2 uHoldPos;
     uniform float uHoldStrength;
     uniform float uHoleRadius;
-    uniform vec2 uRipples[MAX_RIPPLES];
-    uniform float uRippleAges[MAX_RIPPLES];
     uniform float uPixelRatio;
-
-    out float vTone;
-    out float vLayer;
-    out float vHole;
-    out float vFlicker;
-
-    float hash(float n) { return fract(sin(n) * 43758.5453123); }
+    out float vAlpha;
 
     void main() {
-      vec3 pos = aPosition;
-      float isText = aLayer;
+      vec2 pos = aPosition;
 
-      // Stars drift slowly (no mouse interaction, matches main page)
-      if (isText < 0.5) {
-        // Slow orbital drift like main page constellation
-        float drift = 0.012;
-        pos.x += sin(uTime * 0.15 + aSeed * 12.0) * drift;
-        pos.y += cos(uTime * 0.18 + aSeed * 8.0) * drift;
-        // Micro jitter for liveliness
-        pos.x += sin(uTime * 1.6 + aSeed * 19.0) * 0.002;
-        pos.y += cos(uTime * 1.2 + aSeed * 11.0) * 0.002;
-      }
+      // Micro drift
+      pos.x += sin(uTime * 1.5 + aSeed * 20.0) * 0.003;
+      pos.y += cos(uTime * 1.2 + aSeed * 15.0) * 0.003;
 
-      // Click ripples (stars only) - triggered by clicks anywhere
-      if (isText < 0.5) {
-        for (int i = 0; i < MAX_RIPPLES; i++) {
-          float age = uRippleAges[i];
-          if (age >= 0.0 && age < 2.0) {
-            float d = distance(pos.xy, uRipples[i]);
-            float wave = sin(d * 18.0 - age * 7.0);
-            float amp = exp(-d * 1.8) * exp(-age * 1.0);
-            vec2 dir = normalize(pos.xy - uRipples[i] + 0.0001);
-            pos.xy += dir * wave * amp * 0.08;
-          }
-        }
-      }
+      // Distance from hold position
+      float dist = distance(pos, uHoldPos);
+      float radius = max(uHoleRadius, 0.001);
 
-      // Hold effect - push stars away, reveal text
-      float holdDist = distance(pos.xy, uHoldPos);
-      float holdWave = sin(holdDist * 16.0 - uTime * 8.0) * exp(-holdDist * 2.0);
-      vec2 holdDir = normalize(pos.xy - uHoldPos + 0.0001);
+      // Ripple wave effect when holding
+      float wave = sin(dist * 25.0 - uTime * 8.0) * 0.008 * uHoldStrength;
+      vec2 dir = normalize(pos - uHoldPos + 0.0001);
+      pos += dir * wave;
 
-      if (isText < 0.5) {
-        // Stars get pushed away
-        pos.xy += holdDir * holdWave * 0.1 * uHoldStrength;
-        pos.xy += holdDir * exp(-holdDist * 1.5) * uHoldStrength * 0.3;
-      }
+      gl_Position = vec4(pos, 0.0, 1.0);
+      gl_PointSize = 2.0 * uPixelRatio;
 
-      // Hole mask for stars
-      float safeRadius = max(uHoleRadius, 0.001);
-      float holeMask = (1.0 - smoothstep(safeRadius * 0.6, safeRadius, holdDist)) * step(0.001, uHoleRadius);
-
-      gl_Position = vec4(pos.xy, 0.0, 1.0);
-
-      float baseSize = isText > 0.5 ? 2.0 : (1.2 + aTone * 1.5);
-      gl_PointSize = baseSize * uPixelRatio;
-
-      vTone = aTone;
-      vLayer = isText;
-      vHole = holeMask;
-      // Flicker for stars
-      vFlicker = isText < 0.5 ? 0.7 + 0.3 * sin(uTime * 2.0 + aSeed * 20.0) : 1.0;
+      // Alpha based on hole visibility
+      float holeMask = smoothstep(radius, radius * 0.5, dist);
+      vAlpha = holeMask * uHoldStrength;
     }
     `;
 
     const fragmentSrc = `#version 300 es
     precision highp float;
-    in float vTone;
-    in float vLayer;
-    in float vHole;
-    in float vFlicker;
-    uniform float uHoldStrength;
+    in float vAlpha;
     out vec4 outColor;
-
     void main() {
-      vec2 uv = gl_PointCoord - 0.5;
-      float d = length(uv);
-
-      float isText = vLayer;
-
-      // Stars: soft glow with flicker
-      float starCore = smoothstep(0.5, 0.0, d);
-      float starAlpha = starCore * vTone * vFlicker * 0.8;
-
-      // Text: sharp particles
-      float textCore = smoothstep(0.12, 0.0, d);
-      float textAlpha = textCore * uHoldStrength;
-
-      // Star color (white with slight variation)
-      vec3 starColor = vec3(vTone * 0.95);
-      // Text color (green)
-      vec3 textColor = vec3(0.23, 0.89, 0.55);
-
-      vec3 finalColor = mix(starColor, textColor, isText);
-      float finalAlpha = mix(starAlpha * (1.0 - vHole * 0.8), textAlpha * vHole, isText);
-
-      outColor = vec4(finalColor, finalAlpha);
+      float d = length(gl_PointCoord - 0.5);
+      float alpha = smoothstep(0.5, 0.0, d) * vAlpha;
+      outColor = vec4(0.23, 0.89, 0.55, alpha);
     }
     `;
 
-    function createShader(type, source) {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error(gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    }
+    let program, uniforms, vao, particleCount = 0;
+    const teamMembers = [];
 
-    function createProgram(vsSrc, fsSrc) {
-      const vs = createShader(gl.VERTEX_SHADER, vsSrc);
-      const fs = createShader(gl.FRAGMENT_SHADER, fsSrc);
-      const program = gl.createProgram();
+    if (gl) {
+      function createShader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.error(gl.getShaderInfoLog(s));
+          return null;
+        }
+        return s;
+      }
+
+      const vs = createShader(gl.VERTEX_SHADER, vertexSrc);
+      const fs = createShader(gl.FRAGMENT_SHADER, fragmentSrc);
+      program = gl.createProgram();
       gl.attachShader(program, vs);
       gl.attachShader(program, fs);
       gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.error(gl.getProgramInfoLog(program));
-        return null;
-      }
-      return program;
+      gl.useProgram(program);
+
+      uniforms = {
+        time: gl.getUniformLocation(program, 'uTime'),
+        holdPos: gl.getUniformLocation(program, 'uHoldPos'),
+        holdStrength: gl.getUniformLocation(program, 'uHoldStrength'),
+        holeRadius: gl.getUniformLocation(program, 'uHoleRadius'),
+        pixelRatio: gl.getUniformLocation(program, 'uPixelRatio')
+      };
     }
 
-    const program = createProgram(vertexSrc, fragmentSrc);
-    gl.useProgram(program);
-
-    const MAX_RIPPLES = 8;
-    const uniforms = {
-      time: gl.getUniformLocation(program, 'uTime'),
-      mouse: gl.getUniformLocation(program, 'uMouse'),
-      mouseStrength: gl.getUniformLocation(program, 'uMouseStrength'),
-      holdPos: gl.getUniformLocation(program, 'uHoldPos'),
-      holdStrength: gl.getUniformLocation(program, 'uHoldStrength'),
-      holeRadius: gl.getUniformLocation(program, 'uHoleRadius'),
-      ripples: gl.getUniformLocation(program, 'uRipples[0]'),
-      rippleAges: gl.getUniformLocation(program, 'uRippleAges[0]'),
-      pixelRatio: gl.getUniformLocation(program, 'uPixelRatio')
-    };
-
-    // Ripple state
-    const rippleLife = 2.0;
-    const ripples = [];
-    const ripplePositions = new Float32Array(MAX_RIPPLES * 2);
-    const rippleAges = new Float32Array(MAX_RIPPLES);
-
-    function addRipple(clientX, clientY) {
-      const x = (clientX / window.innerWidth) * 2 - 1;
-      const y = 1 - (clientY / window.innerHeight) * 2;
-      ripples.push({ x, y, age: 0 });
-      if (ripples.length > MAX_RIPPLES) ripples.shift();
-    }
-
-    // Build text points for a single word
-    function buildTextPoints(word, centerX, centerY, options = {}) {
+    function buildTextPoints(word, cx, cy, radius) {
       const c = document.createElement('canvas');
-      const size = options.size || 200;
+      const size = 200;
       c.width = size * 3;
       c.height = size;
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = `${options.weight || 800} ${size * 0.5}px ${options.font || 'Arial Black, Arial'}`;
+      ctx.font = '900 80px Arial Black, Arial';
       ctx.fillText(word, c.width / 2, c.height / 2);
 
       const data = ctx.getImageData(0, 0, c.width, c.height).data;
       const points = [];
-      const step = options.step || 2;
-      const scale = options.scale || 0.15;
+      const scale = radius * 2.5;
 
-      for (let y = 0; y < c.height; y += step) {
-        for (let x = 0; x < c.width; x += step) {
-          const idx = (y * c.width + x) * 4;
-          if (data[idx] > 30) {
-            const nx = centerX + ((x / c.width) - 0.5) * scale * 2;
-            const ny = centerY + (0.5 - (y / c.height)) * scale * 0.67;
-            points.push({ x: nx, y: ny });
+      for (let y = 0; y < c.height; y += 2) {
+        for (let x = 0; x < c.width; x += 2) {
+          if (data[(y * c.width + x) * 4] > 30) {
+            const nx = cx + ((x / c.width) - 0.5) * scale;
+            const ny = cy + (0.5 - (y / c.height)) * scale * 0.35;
+            points.push(nx, ny);
           }
         }
       }
       return points;
     }
 
-    // Team members with hobbies and positions
-    const teamMembers = [];
-    let particleData = null;
-    let vao = null;
+    function initGL() {
+      if (!gl) return;
 
-    function getTeamMemberPositions() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      glCanvas.width = Math.floor(window.innerWidth * dpr);
+      glCanvas.height = Math.floor(window.innerHeight * dpr);
+      gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+
+      // Get team member positions
       teamMembers.length = 0;
       document.querySelectorAll('.team-member').forEach(el => {
         const hobby = el.dataset.hobby;
@@ -562,53 +525,23 @@
           teamMembers.push({ hobby, cx, cy, radius, rect });
         }
       });
-    }
 
-    function initParticles() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(window.innerWidth * dpr);
-      canvas.height = Math.floor(window.innerHeight * dpr);
-      gl.viewport(0, 0, canvas.width, canvas.height);
-
-      getTeamMemberPositions();
-
-      // Create stars
-      const starCount = 400;
+      // Build all text particles
       const positions = [];
       const seeds = [];
-      const tones = [];
-      const layers = [];
-
-      for (let i = 0; i < starCount; i++) {
-        positions.push((Math.random() * 2 - 1), (Math.random() * 2 - 1), 0);
-        seeds.push(Math.random());
-        tones.push(0.3 + Math.random() * 0.7);
-        layers.push(0); // 0 = star
-      }
-
-      // Create text particles for each team member
-      teamMembers.forEach(member => {
-        const pts = buildTextPoints(member.hobby, member.cx, member.cy, {
-          size: 180,
-          step: 2,
-          scale: member.radius * 2.2,
-          weight: 900
-        });
-        const multiplier = 8;
-        for (let i = 0; i < pts.length * multiplier; i++) {
-          const p = pts[Math.floor(Math.random() * pts.length)];
-          const jitter = 0.002;
-          positions.push(p.x + (Math.random() - 0.5) * jitter, p.y + (Math.random() - 0.5) * jitter, 0);
-          seeds.push(Math.random());
-          tones.push(0.8 + Math.random() * 0.2);
-          layers.push(1); // 1 = text
+      teamMembers.forEach(m => {
+        const pts = buildTextPoints(m.hobby, m.cx, m.cy, m.radius);
+        for (let i = 0; i < pts.length; i += 2) {
+          // Add multiple particles per point for density
+          for (let j = 0; j < 6; j++) {
+            positions.push(pts[i] + (Math.random() - 0.5) * 0.003);
+            positions.push(pts[i + 1] + (Math.random() - 0.5) * 0.003);
+            seeds.push(Math.random());
+          }
         }
       });
 
-      const positionArray = new Float32Array(positions);
-      const seedArray = new Float32Array(seeds);
-      const toneArray = new Float32Array(tones);
-      const layerArray = new Float32Array(layers);
+      particleCount = positions.length / 2;
 
       if (vao) gl.deleteVertexArray(vao);
       vao = gl.createVertexArray();
@@ -616,103 +549,56 @@
 
       const posBuf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, positionArray, gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(0);
-      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
       const seedBuf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, seedBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, seedArray, gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(seeds), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(1);
       gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
-
-      const toneBuf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, toneBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, toneArray, gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(2);
-      gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
-
-      const layerBuf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, layerBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, layerArray, gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(3);
-      gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 0, 0);
-
-      particleData = { count: positions.length / 3 };
     }
 
-    // Interaction state
-    let mouseX = 0.5, mouseY = 0.5;
-    let mouseStrength = 0;
+    // Interaction
     let isHolding = false;
     let holdStart = 0;
-    let holdX = 0, holdY = 0;
     let holdStrength = 0;
     let holeRadius = 0;
     let currentMember = null;
     let whooshPlayed = false;
 
-    function getMemberAtPosition(clientX, clientY) {
-      for (const member of teamMembers) {
-        const rect = member.rect;
-        const dx = clientX - (rect.left + rect.width / 2);
-        const dy = clientY - (rect.top + rect.height / 2);
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < rect.width / 2) {
-          return member;
-        }
+    function getMemberAt(x, y) {
+      for (const m of teamMembers) {
+        const r = m.rect;
+        const dx = x - (r.left + r.width / 2);
+        const dy = y - (r.top + r.height / 2);
+        if (Math.sqrt(dx * dx + dy * dy) < r.width / 2) return m;
       }
       return null;
     }
 
-    window.addEventListener('pointermove', (e) => {
-      mouseX = e.clientX / window.innerWidth;
-      mouseY = 1 - e.clientY / window.innerHeight;
-      mouseStrength = 1.0;
-      mouseMoved = true;
-      if (isHolding) {
-        holdX = e.clientX;
-        holdY = e.clientY;
-      }
-    }, { passive: true });
-
-    let mouseMoved = false;
-
     window.addEventListener('pointerdown', (e) => {
-      if (e.target && e.target.closest('[data-ui]')) return;
-
-      // Always add ripple on click
-      addRipple(e.clientX, e.clientY);
-
-      const member = getMemberAtPosition(e.clientX, e.clientY);
-      if (member) {
+      if (e.target.closest('[data-ui]')) return;
+      const m = getMemberAt(e.clientX, e.clientY);
+      if (m) {
         e.preventDefault();
-        currentMember = member;
+        currentMember = m;
         isHolding = true;
         holdStart = performance.now();
-        holdX = e.clientX;
-        holdY = e.clientY;
         whooshPlayed = false;
       }
     });
 
-    window.addEventListener('pointerup', (e) => {
-      // Always add ripple on release
-      addRipple(e.clientX, e.clientY);
-
-      if (isHolding && whooshPlayed) {
-        playWhoosh(true);
-      }
+    window.addEventListener('pointerup', () => {
+      if (isHolding && whooshPlayed) playWhoosh(true);
       isHolding = false;
       currentMember = null;
       whooshPlayed = false;
-    }, { passive: true });
+    });
 
-    // Prevent context menu on long press
     window.addEventListener('contextmenu', (e) => {
-      if (getMemberAtPosition(e.clientX, e.clientY)) {
-        e.preventDefault();
-      }
+      if (getMemberAt(e.clientX, e.clientY)) e.preventDefault();
     });
 
     // Render loop
@@ -721,93 +607,60 @@
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      // Update warp stars
+      updateWarpStars(dt);
 
-      if (!particleData) {
-        requestAnimationFrame(render);
-        return;
-      }
-
-      // Update hold strength
+      // Update hold state
       if (isHolding && currentMember) {
         const elapsed = (performance.now() - holdStart) / 1000;
-        holdStrength = Math.min(1, elapsed / 0.6);
-        holeRadius = holdStrength * currentMember.radius * 1.2;
-
-        // Play whoosh when hold starts
-        if (!whooshPlayed && holdStrength > 0.1) {
+        holdStrength = Math.min(1, elapsed / 0.5);
+        holeRadius = currentMember.radius * 1.3;
+        if (!whooshPlayed && holdStrength > 0.15) {
           playWhoosh(false);
           whooshPlayed = true;
         }
       } else {
-        holdStrength *= 0.85;
-        holeRadius *= 0.85;
+        holdStrength *= 0.88;
         if (holdStrength < 0.01) holdStrength = 0;
-        if (holeRadius < 0.001) holeRadius = 0;
       }
 
-      // Update ripples
-      ripplePositions.fill(-99);
-      rippleAges.fill(-1);
-      ripples.forEach((r, i) => {
-        r.age += dt;
-        if (r.age < rippleLife) {
-          ripplePositions[i * 2] = r.x;
-          ripplePositions[i * 2 + 1] = r.y;
-          rippleAges[i] = r.age;
-        }
-      });
-      while (ripples.length && ripples[0].age >= rippleLife) ripples.shift();
+      // Render WebGL text particles
+      if (gl && particleCount > 0) {
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-      // Mouse strength decay (slower to keep ripples visible)
-      if (mouseMoved) {
-        mouseStrength = 1.0;
-        mouseMoved = false;
-      } else {
-        mouseStrength *= 0.992;
+        gl.useProgram(program);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        gl.uniform1f(uniforms.time, time / 1000);
+        gl.uniform2f(uniforms.holdPos, currentMember ? currentMember.cx : 0, currentMember ? currentMember.cy : 0);
+        gl.uniform1f(uniforms.holdStrength, holdStrength);
+        gl.uniform1f(uniforms.holeRadius, holeRadius);
+        gl.uniform1f(uniforms.pixelRatio, dpr);
+
+        gl.bindVertexArray(vao);
+        gl.drawArrays(gl.POINTS, 0, particleCount);
       }
-
-      // Set uniforms
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      gl.uniform1f(uniforms.time, time / 1000);
-      gl.uniform2f(uniforms.mouse, mouseX, mouseY);
-      gl.uniform1f(uniforms.mouseStrength, mouseStrength);
-
-      const holdNdcX = currentMember ? currentMember.cx : (holdX / window.innerWidth * 2 - 1);
-      const holdNdcY = currentMember ? currentMember.cy : (1 - holdY / window.innerHeight * 2);
-      gl.uniform2f(uniforms.holdPos, holdNdcX, holdNdcY);
-      gl.uniform1f(uniforms.holdStrength, holdStrength);
-      gl.uniform1f(uniforms.holeRadius, holeRadius);
-      gl.uniform2fv(uniforms.ripples, ripplePositions);
-      gl.uniform1fv(uniforms.rippleAges, rippleAges);
-      gl.uniform1f(uniforms.pixelRatio, dpr);
-
-      gl.bindVertexArray(vao);
-      gl.drawArrays(gl.POINTS, 0, particleData.count);
 
       requestAnimationFrame(render);
     }
 
-    // Initialize
-    function init() {
-      initParticles();
-      requestAnimationFrame(render);
-    }
-
-    // Handle resize
-    let resizeTimeout;
+    // Init
+    let resizeTimer;
     window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        initParticles();
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        resizeWarp();
+        initWarpStars();
+        initGL();
       }, 150);
     });
 
-    // Start after a short delay to ensure layout is stable
-    setTimeout(init, 100);
+    setTimeout(() => {
+      initGL();
+      requestAnimationFrame(render);
+    }, 100);
   </script>
 </body>
 </html>
