@@ -124,6 +124,22 @@
 - Live URL:
   - https://stratminds-ai-bot.web.app
 
+### Release Cleanup
+Firebase Hosting keeps all previous versions by default, consuming significant storage (~800MB per release with videos).
+
+**Cleanup script**: `scripts/cleanup-firebase-releases.sh`
+- Deletes old releases, keeps last N (default: 2)
+- Shows storage consumed and freed
+- Requires: `gcloud auth login` (one-time setup)
+
+**Usage**:
+```bash
+./scripts/cleanup-firebase-releases.sh      # Keep last 2 releases
+./scripts/cleanup-firebase-releases.sh 3    # Keep last 3 releases
+```
+
+**Reminder**: Run after deploying to free storage. Each deploy adds ~800MB.
+
 ## Git / Large Files
 - MP4s are large and tracked via Git LFS (`.gitattributes` includes `*.mp4`).
 - If pushes fail with HTTP 400, use:
