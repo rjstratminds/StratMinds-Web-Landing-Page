@@ -39,6 +39,15 @@
       z-index: 1;
       pointer-events: none;
     }
+    #profileCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
     .page-content {
       position: relative;
       z-index: 2;
@@ -137,7 +146,11 @@
       border: 6px solid rgba(255, 255, 255, 0.3);
       object-fit: cover;
       display: block;
-      transition: border-color 200ms ease, transform 200ms ease;
+      transition: border-color 200ms ease, transform 200ms ease, opacity 600ms ease;
+      opacity: 0;
+    }
+    .profile-photo.revealed {
+      opacity: 1;
     }
     .profile-link:hover .profile-photo {
       border-color: #3be28c;
@@ -187,6 +200,7 @@
 <body>
   <canvas id="starCanvas"></canvas>
   <canvas id="textCanvas"></canvas>
+  <canvas id="profileCanvas"></canvas>
   <div class="page-content">
   <a href="index.html" class="back-link" data-ui="true">Back</a>
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
@@ -380,11 +394,177 @@
     }
     resizeText();
 
+    // ===== PROFILE PARTICLE CANVAS =====
+    const profileCanvas = document.getElementById('profileCanvas');
+    const profileCtx = profileCanvas.getContext('2d');
+    const profileParticles = [];
+    let profileAnimStart = 0;
+    const PROFILE_ANIM_DURATION = 2500; // ms
+
+    function resizeProfile() {
+      profileCanvas.width = window.innerWidth;
+      profileCanvas.height = window.innerHeight;
+    }
+    resizeProfile();
+
+    function loadProfileParticles() {
+      const photos = document.querySelectorAll('.profile-photo');
+      const loadPromises = [];
+
+      photos.forEach((photo, index) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        const promise = new Promise((resolve) => {
+          img.onload = () => {
+            // Sample the image to create particles
+            const tempCanvas = document.createElement('canvas');
+            const size = 100; // Sample size
+            tempCanvas.width = size;
+            tempCanvas.height = size;
+            const ctx = tempCanvas.getContext('2d');
+
+            // Draw circular clip
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(img, 0, 0, size, size);
+
+            const imageData = ctx.getImageData(0, 0, size, size).data;
+            const particles = [];
+
+            // Sample pixels and create particles for bright areas
+            for (let y = 0; y < size; y += 2) {
+              for (let x = 0; x < size; x += 2) {
+                const i = (y * size + x) * 4;
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                if (a < 50) continue; // Skip transparent
+
+                // Calculate brightness
+                const brightness = (r + g + b) / 3;
+
+                // Create particle with probability based on brightness
+                if (Math.random() < (brightness / 255) * 0.8 + 0.2) {
+                  // Normalize position to -0.5 to 0.5
+                  const nx = (x / size) - 0.5;
+                  const ny = (y / size) - 0.5;
+
+                  // Check if within circle
+                  if (nx * nx + ny * ny > 0.25) continue;
+
+                  particles.push({
+                    // Target position (relative to photo center)
+                    tx: nx,
+                    ty: ny,
+                    // Start position (scattered)
+                    sx: (Math.random() - 0.5) * 4 + nx,
+                    sy: (Math.random() - 0.5) * 4 + ny - 1,
+                    // Current position
+                    x: 0,
+                    y: 0,
+                    // Brightness for rendering
+                    brightness: brightness / 255,
+                    // Random delay for staggered animation
+                    delay: Math.random() * 0.4,
+                    // Size variation
+                    size: 1 + Math.random() * 1.5
+                  });
+                }
+              }
+            }
+
+            resolve({ photo, particles, index });
+          };
+          img.onerror = () => resolve(null);
+        });
+
+        loadPromises.push(promise);
+        img.src = photo.src;
+      });
+
+      Promise.all(loadPromises).then(results => {
+        results.forEach(result => {
+          if (result) {
+            profileParticles.push(result);
+          }
+        });
+        profileAnimStart = performance.now();
+      });
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function renderProfileParticles(time) {
+      profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
+
+      if (profileParticles.length === 0) return;
+
+      const elapsed = time - profileAnimStart;
+      const globalProgress = Math.min(1, elapsed / PROFILE_ANIM_DURATION);
+
+      for (const { photo, particles } of profileParticles) {
+        const rect = photo.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const photoSize = rect.width - 12; // Account for border
+
+        // Check if animation is complete for this photo
+        if (globalProgress >= 1) {
+          photo.classList.add('revealed');
+          continue;
+        }
+
+        for (const p of particles) {
+          // Individual particle progress with delay
+          const particleProgress = Math.max(0, Math.min(1, (globalProgress - p.delay) / (1 - p.delay)));
+          const easedProgress = easeOutCubic(particleProgress);
+
+          // Interpolate from start to target
+          p.x = p.sx + (p.tx - p.sx) * easedProgress;
+          p.y = p.sy + (p.ty - p.sy) * easedProgress;
+
+          // Convert to screen coordinates
+          const screenX = centerX + p.x * photoSize;
+          const screenY = centerY + p.y * photoSize;
+
+          // Alpha: fade in as particles converge
+          const alpha = Math.min(1, particleProgress * 1.5) * p.brightness;
+
+          // Draw particle
+          profileCtx.beginPath();
+          profileCtx.arc(screenX, screenY, p.size, 0, Math.PI * 2);
+          profileCtx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(3)})`;
+          profileCtx.fill();
+        }
+      }
+    }
+
+    // Start loading after DOM is ready
+    setTimeout(loadProfileParticles, 100);
+
     // ===== AUDIO =====
     let audioEnabled = false;
-    const bgAudio = new Audio('media/audio/Background.Hyperspace - Calm and Ethereal Atmosphere.mp3');
+    const bgAudio = new Audio();
     bgAudio.loop = true;
     bgAudio.volume = 0.252;
+
+    // Load random track from manifest
+    fetch('media/audio/manifest.json')
+      .then(r => r.json())
+      .then(manifest => {
+        const tracks = manifest['stratminds-team'] || [];
+        if (tracks.length > 0) {
+          const track = tracks[Math.floor(Math.random() * tracks.length)];
+          bgAudio.src = 'media/audio/' + track;
+        }
+      })
+      .catch(() => {});
 
     let whooshCtx = null;
     let whooshBuffer = null;
@@ -598,6 +778,9 @@
       // Render warp stars
       renderStars(dt);
 
+      // Render profile particles
+      renderProfileParticles(time);
+
       // Render text particles
       renderTextParticles(time);
 
@@ -609,6 +792,7 @@
       resizeStars();
       initStars();
       resizeText();
+      resizeProfile();
       getTeamMembers();
     });
 

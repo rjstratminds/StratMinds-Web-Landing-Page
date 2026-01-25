@@ -1683,13 +1683,25 @@
     }
 
     let audioEnabled = false;
-    const bgAudio = new Audio('media/audio/Background.Hyperspace - Calm and Ethereal Atmosphere.mp3');
+    const bgAudio = new Audio();
     const warpAudio = new Audio('media/audio/Effect.Hyperspace - Fast Stutter UFO Fly By Whoosh.mp3');
     bgAudio.loop = true;
     bgAudio.preload = 'metadata';
     warpAudio.preload = 'auto';
     bgAudio.volume = 0.252;
     warpAudio.volume = 0.6;
+
+    // Load random track from manifest
+    fetch('media/audio/manifest.json')
+      .then(r => r.json())
+      .then(manifest => {
+        const tracks = manifest['index'] || [];
+        if (tracks.length > 0) {
+          const track = tracks[Math.floor(Math.random() * tracks.length)];
+          bgAudio.src = 'media/audio/' + track;
+        }
+      })
+      .catch(() => {});
 
     function triggerHyperspaceSound() {
       if (!audioEnabled || !warpEnabled) return;
