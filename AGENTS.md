@@ -13,6 +13,22 @@
 
 ## Recent Updates (Jan 2026)
 
+### Team Page Layout Refinements
+- **2-column grid**: Lead Partners now display in 2 columns (was 4), max-width 600px
+- **Responsive simplification**: Removed 900px breakpoint (2-column is now default)
+- **Role text**: Summer's role now reads "Next Gen UX / +Tech Adoption" (line break)
+- **Bio typos fixed**: "over a 1.8 billion" → "over 1.8 billion", added Oxford comma to Arnold's bio
+- **Role shortening**: Mike's role simplified to "Next Gen AI+Enterprise"
+
+### "Our Team" Link Styling
+- Restyled from bold green text to pill/button style
+- Uppercase, 12px font, 0.2em letter-spacing
+- Transparent background with subtle white border
+- Hover: green text + green border
+
+### Favicon
+- Updated `favicon.jpg` (new version)
+
 ### Team Page (stratminds-team.html)
 - **New page**: Created `stratminds-team.html` with team member profiles
 - **Lead Partners**: Richard Jhang, Anton Borzov, Summer Kim, Arie Fisher

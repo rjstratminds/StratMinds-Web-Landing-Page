@@ -446,18 +446,21 @@
       transform: none;
     }
     .team-link {
-      display: block;
+      display: inline-block;
       margin-top: 0;
-      color: #3be28c;
-      font-size: 13px;
-      letter-spacing: 0.02em;
-      font-weight: bold;
+      color: var(--soft);
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
       text-decoration: none;
-      text-align: center;
-      transition: color 180ms ease;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 12px;
+      transition: color 180ms ease, border-color 180ms ease;
     }
     .team-link:hover {
-      color: #5bf5a8;
+      color: #3be28c;
+      border-color: #3be28c;
     }
     @keyframes breathe {
       0%, 100% { opacity: 0.3; transform: translateY(0); }
