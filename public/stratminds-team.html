@@ -265,56 +265,106 @@
   </div>
 
   <script>
-    // ===== STARS (2D Canvas - drifting twinkling dots) =====
+    // ===== WARP STARS (moving toward viewer from center) =====
     const starCanvas = document.getElementById('starCanvas');
     const starCtx = starCanvas.getContext('2d');
     const stars = [];
-    const STAR_COUNT = 250;
+    const STAR_COUNT = 350;
+    let warpCenter = { x: 0, y: 0 };
 
     function resizeStars() {
       starCanvas.width = window.innerWidth;
       starCanvas.height = window.innerHeight;
+      warpCenter = { x: starCanvas.width / 2, y: starCanvas.height / 2 };
+    }
+
+    function spawnStar() {
+      // Spawn near center with random offset
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 80;
+      const x = warpCenter.x + Math.cos(angle) * dist;
+      const y = warpCenter.y + Math.sin(angle) * dist;
+
+      // Direction pointing outward from center
+      const dx = x - warpCenter.x;
+      const dy = y - warpCenter.y;
+      const len = Math.hypot(dx, dy) || 1;
+
+      return {
+        x,
+        y,
+        dirX: dx / len,
+        dirY: dy / len,
+        age: Math.random() * 0.5,
+        v0: 30 + Math.random() * 60,
+        alpha: 0.3 + Math.random() * 0.5,
+        tint: 0.85 + Math.random() * 0.15
+      };
     }
 
     function initStars() {
       stars.length = 0;
       for (let i = 0; i < STAR_COUNT; i++) {
-        stars.push({
-          x: Math.random() * starCanvas.width,
-          y: Math.random() * starCanvas.height,
-          baseX: 0,
-          baseY: 0,
-          size: 0.5 + Math.random() * 1.5,
-          alpha: 0.2 + Math.random() * 0.5,
-          phase: Math.random() * Math.PI * 2,
-          driftSpeed: 0.2 + Math.random() * 0.4,
-          driftPhaseX: Math.random() * Math.PI * 2,
-          driftPhaseY: Math.random() * Math.PI * 2
-        });
+        const star = spawnStar();
+        // Spread initial stars across the screen
+        const spreadDist = Math.random() * Math.max(starCanvas.width, starCanvas.height) * 0.7;
+        star.x = warpCenter.x + star.dirX * spreadDist;
+        star.y = warpCenter.y + star.dirY * spreadDist;
+        stars.push(star);
       }
-      stars.forEach(s => { s.baseX = s.x; s.baseY = s.y; });
     }
 
-    function renderStars(time) {
+    function renderStars(dt) {
       starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+      starCtx.globalCompositeOperation = 'lighter';
 
-      for (const star of stars) {
-        // Drift movement
-        const driftX = Math.sin(time * 0.0003 * star.driftSpeed + star.driftPhaseX) * 15;
-        const driftY = Math.cos(time * 0.0002 * star.driftSpeed + star.driftPhaseY) * 15;
-        star.x = star.baseX + driftX;
-        star.y = star.baseY + driftY;
+      const maxDim = Math.max(starCanvas.width, starCanvas.height);
 
-        // Twinkle
-        const twinkle = 0.6 + 0.4 * Math.sin(time * 0.002 * star.driftSpeed + star.phase);
-        const alpha = star.alpha * twinkle;
+      for (const p of stars) {
+        p.age += dt;
 
-        // Draw dot
+        // Speed increases with age (acceleration toward viewer)
+        const speed = p.v0 * (0.3 + p.age * 0.8);
+        p.x += p.dirX * speed * dt;
+        p.y += p.dirY * speed * dt;
+
+        // Distance from center for trail length
+        const distFromCenter = Math.hypot(p.x - warpCenter.x, p.y - warpCenter.y);
+        const distN = Math.min(1, distFromCenter / maxDim);
+
+        // Trail gets longer as star moves outward
+        const trail = 2 + speed * 0.04 * (0.3 + distN * 0.7);
+        const thickness = 0.5 + speed * 0.006;
+
+        // Brightness
+        const brightness = Math.min(0.9, p.alpha * (0.4 + distN * 0.6));
+        const r = Math.floor(225 + 20 * p.tint);
+        const g = Math.floor(240 + 12 * p.tint);
+        const b = 255;
+
+        // Respawn if off screen
+        if (p.x < -50 || p.x > starCanvas.width + 50 ||
+            p.y < -50 || p.y > starCanvas.height + 50) {
+          const newStar = spawnStar();
+          p.x = newStar.x;
+          p.y = newStar.y;
+          p.dirX = newStar.dirX;
+          p.dirY = newStar.dirY;
+          p.age = 0;
+          p.v0 = newStar.v0;
+          continue;
+        }
+
+        // Draw star with trail
+        starCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${brightness.toFixed(3)})`;
+        starCtx.lineWidth = thickness;
         starCtx.beginPath();
-        starCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        starCtx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(3)})`;
-        starCtx.fill();
+        starCtx.moveTo(p.x - p.dirX * trail, p.y - p.dirY * trail);
+        starCtx.lineTo(p.x, p.y);
+        starCtx.stroke();
       }
+
+      starCtx.globalCompositeOperation = 'source-over';
     }
 
     resizeStars();
@@ -529,7 +579,7 @@
 
     let lastTime = 0;
     function render(time) {
-      const dt = time - lastTime;
+      const dt = (time - lastTime) / 1000; // Convert to seconds
       lastTime = time;
 
       // Update hold strength
@@ -545,8 +595,8 @@
         if (holdStrength < 0.01) holdStrength = 0;
       }
 
-      // Render stars
-      renderStars(time);
+      // Render warp stars
+      renderStars(dt);
 
       // Render text particles
       renderTextParticles(time);
