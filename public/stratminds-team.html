@@ -29,6 +29,7 @@
       width: 100%;
       height: 100%;
       z-index: 0;
+      pointer-events: auto;
     }
     .page-content {
       position: relative;
@@ -276,11 +277,24 @@
     let whooshBufferRev = null;
     let whooshLoading = false;
 
+    // Background audio
+    const bgAudio = new Audio('media/audio/Background.Hyperspace - Calm and Ethereal Atmosphere.mp3');
+    bgAudio.loop = true;
+    bgAudio.preload = 'metadata';
+    bgAudio.volume = 0.252;
+
     const soundToggle = document.getElementById('soundToggle');
     soundToggle.addEventListener('click', () => {
       audioEnabled = !audioEnabled;
       soundToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
-      if (audioEnabled) initWhoosh();
+      if (audioEnabled) {
+        bgAudio.currentTime = 0;
+        bgAudio.play().catch(() => {});
+        initWhoosh();
+      } else {
+        bgAudio.pause();
+        bgAudio.currentTime = 0;
+      }
     });
 
     function initWhoosh() {
@@ -348,6 +362,7 @@
     out float vTone;
     out float vLayer;
     out float vHole;
+    out float vFlicker;
 
     float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
@@ -355,31 +370,35 @@
       vec3 pos = aPosition;
       float isText = aLayer;
 
-      // Stars drift slowly
+      // Stars drift and twinkle
       if (isText < 0.5) {
-        pos.x += sin(uTime * 0.08 + aSeed * 17.0) * 0.003;
-        pos.y += cos(uTime * 0.06 + aSeed * 13.0) * 0.003;
+        // Continuous drift motion
+        pos.x += sin(uTime * 0.3 + aSeed * 17.0) * 0.015;
+        pos.y += cos(uTime * 0.25 + aSeed * 13.0) * 0.015;
+        // Additional micro-movement
+        pos.x += sin(uTime * 1.2 + aSeed * 31.0) * 0.004;
+        pos.y += cos(uTime * 1.0 + aSeed * 23.0) * 0.004;
       }
 
       // Mouse hover ripple (stars only)
       if (isText < 0.5) {
         vec2 m = uMouse * 2.0 - 1.0;
         float md = distance(pos.xy, m);
-        float hoverWave = sin(md * 18.0 - uTime * 6.0) * exp(-md * 3.0);
+        float hoverWave = sin(md * 14.0 - uTime * 5.0) * exp(-md * 2.5);
         vec2 hoverDir = normalize(pos.xy - m + 0.0001);
-        pos.xy += hoverDir * hoverWave * 0.04 * uMouseStrength;
+        pos.xy += hoverDir * hoverWave * 0.08 * uMouseStrength;
       }
 
       // Click ripples (stars only)
       if (isText < 0.5) {
         for (int i = 0; i < MAX_RIPPLES; i++) {
           float age = uRippleAges[i];
-          if (age >= 0.0) {
+          if (age >= 0.0 && age < 2.0) {
             float d = distance(pos.xy, uRipples[i]);
-            float wave = sin(d * 20.0 - age * 8.0);
-            float amp = exp(-d * 2.0) * exp(-age * 1.2);
+            float wave = sin(d * 16.0 - age * 6.0);
+            float amp = exp(-d * 1.5) * exp(-age * 0.8);
             vec2 dir = normalize(pos.xy - uRipples[i] + 0.0001);
-            pos.xy += dir * wave * amp * 0.06;
+            pos.xy += dir * wave * amp * 0.12;
           }
         }
       }
@@ -401,12 +420,14 @@
 
       gl_Position = vec4(pos.xy, 0.0, 1.0);
 
-      float baseSize = isText > 0.5 ? 1.8 : (0.8 + aTone * 1.2);
+      float baseSize = isText > 0.5 ? 2.0 : (1.2 + aTone * 1.5);
       gl_PointSize = baseSize * uPixelRatio;
 
       vTone = aTone;
       vLayer = isText;
       vHole = holeMask;
+      // Flicker for stars
+      vFlicker = isText < 0.5 ? 0.7 + 0.3 * sin(uTime * 2.0 + aSeed * 20.0) : 1.0;
     }
     `;
 
@@ -415,6 +436,7 @@
     in float vTone;
     in float vLayer;
     in float vHole;
+    in float vFlicker;
     uniform float uHoldStrength;
     out vec4 outColor;
 
@@ -424,21 +446,21 @@
 
       float isText = vLayer;
 
-      // Stars: soft glow
+      // Stars: soft glow with flicker
       float starCore = smoothstep(0.5, 0.0, d);
-      float starAlpha = starCore * vTone * 0.7;
+      float starAlpha = starCore * vTone * vFlicker * 0.8;
 
       // Text: sharp particles
-      float textCore = smoothstep(0.15, 0.0, d);
+      float textCore = smoothstep(0.12, 0.0, d);
       float textAlpha = textCore * uHoldStrength;
 
-      // Star color (white)
-      vec3 starColor = vec3(vTone * 0.9);
+      // Star color (white with slight variation)
+      vec3 starColor = vec3(vTone * 0.95);
       // Text color (green)
       vec3 textColor = vec3(0.23, 0.89, 0.55);
 
       vec3 finalColor = mix(starColor, textColor, isText);
-      float finalAlpha = mix(starAlpha * (1.0 - vHole), textAlpha * vHole, isText);
+      float finalAlpha = mix(starAlpha * (1.0 - vHole * 0.8), textAlpha * vHole, isText);
 
       outColor = vec4(finalColor, finalAlpha);
     }
@@ -655,14 +677,20 @@
       mouseX = e.clientX / window.innerWidth;
       mouseY = 1 - e.clientY / window.innerHeight;
       mouseStrength = 1.0;
+      mouseMoved = true;
       if (isHolding) {
         holdX = e.clientX;
         holdY = e.clientY;
       }
     }, { passive: true });
 
+    let mouseMoved = false;
+
     window.addEventListener('pointerdown', (e) => {
       if (e.target && e.target.closest('[data-ui]')) return;
+
+      // Always add ripple on click
+      addRipple(e.clientX, e.clientY);
 
       const member = getMemberAtPosition(e.clientX, e.clientY);
       if (member) {
@@ -674,17 +702,18 @@
         holdY = e.clientY;
         whooshPlayed = false;
       }
-      addRipple(e.clientX, e.clientY);
     });
 
     window.addEventListener('pointerup', (e) => {
+      // Always add ripple on release
+      addRipple(e.clientX, e.clientY);
+
       if (isHolding && whooshPlayed) {
         playWhoosh(true);
       }
       isHolding = false;
       currentMember = null;
       whooshPlayed = false;
-      addRipple(e.clientX, e.clientY);
     }, { passive: true });
 
     // Prevent context menu on long press
@@ -741,8 +770,13 @@
       });
       while (ripples.length && ripples[0].age >= rippleLife) ripples.shift();
 
-      // Mouse strength decay
-      mouseStrength *= 0.96;
+      // Mouse strength decay (slower to keep ripples visible)
+      if (mouseMoved) {
+        mouseStrength = 1.0;
+        mouseMoved = false;
+      } else {
+        mouseStrength *= 0.992;
+      }
 
       // Set uniforms
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
