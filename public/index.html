@@ -1978,16 +1978,14 @@
         introCue.style.opacity = '1';
         const cueRect = introCue.getBoundingClientRect();
         const cueCenter = cueRect.top + cueRect.height * 0.5;
-        const topZone = window.innerHeight * 0.12;
-        const fadeTop = 1 - Math.max(0, Math.min(1, cueCenter / topZone));
+        const fadeTop = 1 - Math.max(0, Math.min(1, cueCenter / window.innerHeight));
         introCue.style.setProperty('--fade', fadeTop.toFixed(3));
       }
       const dividerCue = document.querySelector('.divider-cue');
       if (dividerCue) {
         const divRect = dividerCue.getBoundingClientRect();
         const divCenter = divRect.top + divRect.height * 0.5;
-        const topZone = window.innerHeight * 0.12;
-        const fadeTop = 1 - Math.max(0, Math.min(1, divCenter / topZone));
+        const fadeTop = 1 - Math.max(0, Math.min(1, divCenter / window.innerHeight));
         dividerCue.style.setProperty('--fade', fadeTop.toFixed(3));
       }
       if (introCue) {
