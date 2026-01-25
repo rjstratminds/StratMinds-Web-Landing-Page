@@ -882,7 +882,6 @@
     let logoMaskW = 0;
     let logoMaskH = 0;
     let warpMaskPoints = [];
-    let hiddenTextHitAreas = null;
     let warpEnabled = true;
     let warpStars = [];
     let warpCenter = { x: 0, y: 0 };
@@ -909,7 +908,6 @@
     let holdY = 0.0;
     let holdReleaseTime = 0;
     let holdReleaseStrength = 0;
-    let namesLockedOpen = false;  // Names stay visible after full reveal
     const MAX_RIPPLES = 8;
     const rippleLife = 2.0;
     const ripples = [];
@@ -1238,34 +1236,14 @@
       const hiddenFactor = Math.min(1, maxDim / Math.max(rawW, rawH));
       const logoCssCenterY = logoRectCss ? (logoRectCss.y + logoRectCss.h / 2) : (window.innerHeight / 2);
       const hiddenYPx = logoCssCenterY * dpr * hiddenScale * hiddenFactor;
-      const hiddenPoints = buildColumnsTextPoints(canvas.width, canvas.height, ['Richard\nJhang', 'Anton\nBorzov', 'Summer\nKim', 'Arie\nFisher'], {
-        sizeFactor: isMobile ? 0.047 : 0.057,
-        weight: 900,
-        font: 'Arial Black, Arial, Helvetica, sans-serif',
-        lineHeight: 1.12,
-        stepDiv: isMobile ? 280000 : 380000,
-        spreadFactor: hiddenSpreadFactor,
+      const hiddenPoints = buildTextPoints(canvas.width, canvas.height, 'AI for Good', {
+        sizeFactor: isMobile ? 0.10 : 0.12,
+        weight: 400,
+        font: 'Avenir, "Avenir Next", Arial, sans-serif',
+        lineHeight: 1.15,
+        stepDiv: isMobile ? 180000 : 240000,
         yPx: hiddenYPx
       });
-      // Calculate hit areas for each column in screen coordinates
-      // Use the same positioning formula as buildColumnsTextPoints for accurate alignment
-      const hiddenBounds = computeBoundsFromPoints(hiddenPoints);
-      const screenTop = (1 - (hiddenBounds.topNdc + 1) * 0.5) * window.innerHeight;
-      const screenBottom = (1 - (hiddenBounds.bottomNdc + 1) * 0.5) * window.innerHeight;
-      // Calculate column centers directly (matching buildColumnsTextPoints layout)
-      const spreadWidth = window.innerWidth * hiddenSpreadFactor;
-      const colSpacing = spreadWidth / 3;
-      const startX = (window.innerWidth - spreadWidth) / 2;
-      hiddenTextHitAreas = {
-        top: screenTop,
-        bottom: screenBottom,
-        columns: [
-          { x: startX, w: colSpacing * 0.8 },
-          { x: startX + colSpacing, w: colSpacing * 0.8 },
-          { x: startX + colSpacing * 2, w: colSpacing * 0.8 },
-          { x: startX + colSpacing * 3, w: colSpacing * 0.8 }
-        ]
-      };
       const hiddenCount = Math.min(isMobile ? 1800000 : 2800000, hiddenPoints.length * (isMobile ? 24 : 28));
       const hiddenTargets = new Float32Array(hiddenCount * 3);
       const hiddenSeeds = new Float32Array(hiddenCount);
@@ -1591,10 +1569,6 @@
       if (e.target && e.target.closest('[data-ui]')) {
         return;
       }
-      // If names are locked open, don't start a new hold - let pointerup handle the click
-      if (namesLockedOpen) {
-        return;
-      }
       holdReleaseTime = 0;
       whooshActive = isInLogoRect(e.clientX, e.clientY);
       if (whooshActive) {
@@ -1606,31 +1580,6 @@
       holdY = e.clientY;
       addRipple(e.clientX, e.clientY);
     }, { passive: true });
-
-    const teamLinkedIn = [
-      'https://www.linkedin.com/in/richardjhang/',
-      'https://www.linkedin.com/in/tyggy/',
-      'https://www.linkedin.com/in/skim725/',
-      'https://www.linkedin.com/in/ariefisher/'
-    ];
-
-    function getHiddenTextColumn(x, y) {
-      const W = window.innerWidth;
-      const H = window.innerHeight;
-
-      // Vertical check - must be in upper 60% of screen
-      if (y > H * 0.6) return -1;
-
-      // Horizontal check - must be in center region (15% to 85%)
-      if (x < W * 0.15 || x > W * 0.85) return -1;
-
-      // Fixed percentage boundaries based on observed text positions:
-      const pct = x / W;
-      if (pct < 0.40) return 0;   // Richard
-      if (pct < 0.50) return 1;   // Anton
-      if (pct < 0.60) return 2;   // Summer
-      return 3;                    // Arie
-    }
 
     window.addEventListener('pointerup', (e) => {
       if (e.target && e.target.closest('[data-ui]')) {
@@ -1646,34 +1595,7 @@
       isHolding = false;
       addRipple(e.clientX, e.clientY);
 
-      const inLogoArea = e.clientY < window.innerHeight * 0.6;
-
-      // If names are locked open, check if clicking on a name or elsewhere
-      if (namesLockedOpen) {
-        const col = getHiddenTextColumn(e.clientX, e.clientY);
-        if (col >= 0 && col < teamLinkedIn.length) {
-          // Click on a name - open LinkedIn
-          if (isMobile) {
-            window.location.href = teamLinkedIn[col];
-          } else {
-            window.open(teamLinkedIn[col], '_blank');
-          }
-          namesLockedOpen = false;
-        } else {
-          // Click elsewhere - close names
-          namesLockedOpen = false;
-          holdReleaseTime = now;
-        }
-        return;
-      }
-
-      // If held long enough to fully reveal (ripple maximized), lock names open
-      if (holdReleaseStrength >= 0.85 && inLogoArea) {
-        namesLockedOpen = true;
-        return;
-      }
-
-      // Normal release - fade out
+      // Always release - fade out gradually with closing sound
       holdReleaseTime = now;
     }, { passive: true });
 
@@ -1924,11 +1846,8 @@
       if (isHolding) {
         holdStrength = Math.min(1.0, (now - holdStart) / 900);
         holdPos = toNdc(holdX, holdY);
-      } else if (namesLockedOpen) {
-        // Names are locked open - keep fully visible
-        holdStrength = 1.0;
-        holdPos = toNdc(holdX, holdY);
       } else if (holdReleaseTime > 0) {
+        // Gradually close the hole in sync with closing sound
         const elapsed = (now - holdReleaseTime) / 1000;
         const closeDuration = 1.7;
         if (elapsed < closeDuration) {
@@ -1941,7 +1860,6 @@
       }
       if (cuePassedCenter) {
         holdStrength = 0.0;
-        namesLockedOpen = false;
       }
 
       for (let i = ripples.length - 1; i >= 0; i--) {
