@@ -130,8 +130,11 @@
 ## Hosting / Deploy
 - Firebase Hosting project: `stratminds-ai-bot`
 - Firebase config: `firebase.json` (public = `public/`, SPA rewrite to `/index.html`).
-- Deploy command:
-  - `firebase deploy`
+- **Deploy command** (always use this):
+  ```bash
+  ./scripts/deploy.sh
+  ```
+  This script deploys to Firebase and automatically cleans up old releases (keeps last 2).
 - Live URL:
   - https://stratminds-ai-bot.web.app
 
