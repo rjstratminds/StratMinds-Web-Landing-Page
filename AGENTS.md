@@ -13,6 +13,23 @@
 
 ## Recent Updates (Jan 2026)
 
+### Team Page (stratminds-team.html)
+- **New page**: Created `stratminds-team.html` with team member profiles
+- **Lead Partners**: Richard Jhang, Anton Borzov, Summer Kim, Arie Fisher
+- **Advisory Partners**: Mike Mortensen, Arnold Liwanag
+- **Profile photos**: Circular B&W photos in `public/media/team/`
+- **Hover effect**: Green border (#3be28c) + 5% zoom on hover
+- **LinkedIn links**: Clicking profile photo opens LinkedIn in new tab
+- **Starry background**: Animated twinkling stars matching index.html aesthetic
+- **"Our Team" link**: Added centered below metrics grid on index.html (green, bold, title case)
+
+### Button Hover Effects
+- **Warp On / Sound Off buttons**: Now turn green (text + border) on hover, matching Back button style
+
+### Content Updates
+- **Signals**: "StratMinds AI for real-time market analysis and trend tracking."
+- **Geo Edge**: "Embedded in the epicenter of AI capital, brains and startups."
+
 ### Favicon
 - Updated to black/white PNG version (`favicon.png`)
 - Used for both standard favicon and Apple touch icon
@@ -62,12 +79,14 @@
 
 ## Current Structure
 - Entry point: `public/index.html`
+- Team page: `public/stratminds-team.html`
 - Media:
   - `public/media/audio/` (mp3)
   - `public/media/logo/StratMinds.png`
   - `public/media/icon/StratMinds Video Logo.png`
   - `public/media/video/` (mp4 + icon jpg)
   - `public/media/image/` (unused backgrounds)
+  - `public/media/team/` (profile photos: richard-jhang.png, anton-borzov.png, summer-kim.png, arie-fisher.png, mike-mortensen.png, arnold-liwanag.png)
 
 ## Video Overlay
 - Two tiles under "Dual Investment Thesis":

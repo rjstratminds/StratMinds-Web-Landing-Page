@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Team | StratMinds VC</title>
+  <meta name="description" content="Meet the StratMinds team - seasoned operators and investors building the future of Applied AI." />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --ink: rgba(255, 255, 255, 0.88);
+      --muted: rgba(255, 255, 255, 0.7);
+      --soft: rgba(255, 255, 255, 0.5);
+      --accent: #3be28c;
+      --linkedin: #0a66c2;
+    }
+    html, body { width: 100%; height: 100%; background: #000; }
+    body {
+      font-family: Avenir, "Avenir Next", "Avenir Next LT Pro", "Segoe UI", Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+    #starCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .page-content {
+      position: relative;
+      z-index: 1;
+    }
+    .back-link {
+      position: fixed;
+      left: 4vw;
+      top: 3vh;
+      z-index: 10;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--soft);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 12px;
+      text-decoration: none;
+      transition: color 180ms ease, border-color 180ms ease;
+    }
+    .back-link:hover {
+      color: #3be28c;
+      border-color: #3be28c;
+    }
+    .page-header {
+      text-align: center;
+      padding: 12vh 6vw 4vh;
+    }
+    .page-header h1 {
+      font-size: clamp(28px, 4vw, 48px);
+      letter-spacing: 0.03em;
+      margin-bottom: 1vh;
+    }
+    .page-header h1 span {
+      color: #3be28c;
+    }
+    .team-section {
+      padding: 4vh 6vw;
+    }
+    .section-title {
+      font-size: clamp(16px, 1.8vw, 22px);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--soft);
+      text-align: center;
+      margin-bottom: 4vh;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3vw;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: start;
+    }
+    .team-grid.advisory {
+      grid-template-columns: repeat(2, 1fr);
+      max-width: 520px;
+    }
+    .team-member {
+      text-align: center;
+      position: relative;
+      max-width: 220px;
+      margin: 0 auto;
+    }
+    .profile-link {
+      display: block;
+      width: 100%;
+      max-width: 180px;
+      margin: 0 auto 16px;
+      text-decoration: none;
+    }
+    .profile-photo {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 6px solid rgba(255, 255, 255, 0.3);
+      object-fit: cover;
+      display: block;
+      transition: border-color 200ms ease, transform 200ms ease;
+    }
+    .profile-link:hover .profile-photo {
+      border-color: #3be28c;
+      transform: scale(1.05);
+    }
+    .member-name {
+      font-size: clamp(16px, 1.8vw, 22px);
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .member-role {
+      font-size: clamp(12px, 1.1vw, 14px);
+      color: var(--accent);
+      letter-spacing: 0.02em;
+      margin-bottom: 12px;
+    }
+    .member-bio {
+      font-size: clamp(12px, 1vw, 14px);
+      line-height: 1.6;
+      color: var(--soft);
+      margin-bottom: 12px;
+      min-height: 140px;
+    }
+    .team-grid.advisory .member-bio {
+      min-height: 100px;
+    }
+    .member-expertise {
+      font-size: clamp(11px, 0.9vw, 13px);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .site-footer {
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+      padding: 6vh 6vw 4vh;
+      letter-spacing: 0.02em;
+    }
+    @media (max-width: 900px) {
+      .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5vw;
+      }
+      .team-grid.advisory {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 540px) {
+      .team-grid, .team-grid.advisory {
+        grid-template-columns: 1fr;
+        max-width: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starCanvas"></canvas>
+  <div class="page-content">
+  <a href="index.html" class="back-link">Back</a>
+
+  <header class="page-header">
+    <h1><span>The Minds</span> of StratMinds</h1>
+  </header>
+
+  <section class="team-section">
+    <h2 class="section-title">Lead Partners</h2>
+    <div class="team-grid">
+      <div class="team-member">
+        <a href="https://www.linkedin.com/in/richardjhang/" target="_blank" rel="noopener noreferrer" class="profile-link">
+          <img src="media/team/richard-jhang.png" alt="Richard Jhang" class="profile-photo" />
+        </a>
+        <div class="member-name">Richard Jhang</div>
+        <div class="member-role">Next Gen AI+Computing</div>
+        <p class="member-bio">Seasoned technologist, advisor, and investor in a number of start-ups, funds, and Fortune 500 enterprises. Ex Chief Innovation Officer & Leader of Applied AI @IBM. Led Technology/Strategy at @PwC and @Strategy&. Seasoned VC/angel. CFA.</p>
+        <p class="member-expertise">Expert in AI, corp strategy, innovation and deal / fund structures</p>
+      </div>
+      <div class="team-member">
+        <a href="https://www.linkedin.com/in/tyggy/" target="_blank" rel="noopener noreferrer" class="profile-link">
+          <img src="media/team/anton-borzov.png" alt="Anton Borzov" class="profile-photo" />
+        </a>
+        <div class="member-name">Anton Borzov</div>
+        <div class="member-role">Next Gen Product+UX</div>
+        <p class="member-bio">First product designer/leader at @WhatsApp and @Neeva. Added over a 1.8 billion users in his career. 15+ years of building and supporting global design teams. 25 years in UX, product, and design. Prolific angel investor. M.Sc.</p>
+        <p class="member-expertise">Expert in AI apps / SaaS, product design, UX, 0-to-1 scale-up</p>
+      </div>
+      <div class="team-member">
+        <a href="https://www.linkedin.com/in/skim725/" target="_blank" rel="noopener noreferrer" class="profile-link">
+          <img src="media/team/summer-kim.png" alt="Summer Kim" class="profile-photo" />
+        </a>
+        <div class="member-name">Summer Kim</div>
+        <div class="member-role">Next Gen UX+Adoption</div>
+        <p class="member-bio">Founded/led global UX research functions at @WhatsApp/Meta, @Roblox, @Google Comms. Lead researcher at @Microsoft Surface, @Motorola. Advisor to global tech startups. Added over 1.7 billion users in her career. Active investor/advisor. M.Sc.</p>
+        <p class="member-expertise">Expert in AI apps, product UX, user research, 'next billion users' scale-up</p>
+      </div>
+      <div class="team-member">
+        <a href="https://www.linkedin.com/in/ariefisher/" target="_blank" rel="noopener noreferrer" class="profile-link">
+          <img src="media/team/arie-fisher.png" alt="Arie Fisher" class="profile-photo" />
+        </a>
+        <div class="member-name">Arie Fisher</div>
+        <div class="member-role">Next Gen Computing+Commerce</div>
+        <p class="member-bio">Technologist and investor with unparalleled insights on next gen computing+commerce. Advisor to startups and founders. Ex @Shopify and @Google (led Shopify's Cloud, big data, & next gen commerce strategies). Head of Innovation @PwC. MBA.</p>
+        <p class="member-expertise">Expert in AI, cloud, strategy, innovation, and next-gen commerce</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="team-section">
+    <h2 class="section-title">Advisory Partners</h2>
+    <div class="team-grid advisory">
+      <div class="team-member">
+        <a href="https://www.linkedin.com/in/mikemortensen1/" target="_blank" rel="noopener noreferrer" class="profile-link">
+          <img src="media/team/mike-mortensen.png" alt="Mike Mortensen" class="profile-photo" />
+        </a>
+        <div class="member-name">Mike Mortensen</div>
+        <div class="member-role">Next Gen AI+Enterprise Adoption</div>
+        <p class="member-bio">Technologist, advisor, and investor with ground-truth knowledge for how to successfully deploy Enterprise AI. Consultant @McKinsey and @IBM. Startup leader from Series A @ArenaAI to IPO @Agora. Stanford MBA.</p>
+      </div>
+      <div class="team-member">
+        <a href="https://www.linkedin.com/in/arnoldliwanag/" target="_blank" rel="noopener noreferrer" class="profile-link">
+          <img src="media/team/arnold-liwanag.png" alt="Arnold Liwanag" class="profile-photo" />
+        </a>
+        <div class="member-name">Arnold Liwanag</div>
+        <div class="member-role">Next Gen AI+Enterprise</div>
+        <p class="member-bio">Technologist, advisor and thought leader in Enterprise AI for Fortune 500 companies. Ex CTO @TealBook and @IVADO Labs. Led AI strategy practice at @PwC / @Strategy&. MSc (ABT) Neural Networks.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    &copy; 2026&ndash;Present StratMinds VC, LLC. All rights reserved.
+  </footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const starCount = 200;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+    }
+
+    function initStars() {
+      stars = [];
+      for (let i = 0; i < starCount; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.5 + 0.1,
+          speed: Math.random() * 0.3 + 0.1,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function render(time) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const star of stars) {
+        const flicker = 0.7 + 0.3 * Math.sin(time * 0.001 * star.speed + star.phase);
+        const alpha = star.alpha * flicker;
+
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.fill();
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
