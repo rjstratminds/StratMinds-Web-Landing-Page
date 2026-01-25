@@ -39,15 +39,6 @@
       z-index: 1;
       pointer-events: none;
     }
-    #profileCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 3;
-      pointer-events: none;
-    }
     .page-content {
       position: relative;
       z-index: 2;
@@ -139,31 +130,18 @@
       text-decoration: none;
       position: relative;
     }
-    .profile-link::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 180px;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      border: 4px solid rgba(255, 255, 255, 0.25);
-      transition: border-color 200ms ease;
-      pointer-events: none;
-    }
-    .profile-link:hover::before {
-      border-color: #3be28c;
-    }
     .profile-photo {
       width: 100%;
       aspect-ratio: 1;
       border-radius: 50%;
+      border: 6px solid rgba(255, 255, 255, 0.3);
       object-fit: cover;
       display: block;
-      opacity: 0;
-      pointer-events: none;
+      transition: border-color 200ms ease, transform 200ms ease;
+    }
+    .profile-link:hover .profile-photo {
+      border-color: #3be28c;
+      transform: scale(1.05);
     }
     .profile-link:hover .profile-photo {
       border-color: #3be28c;
@@ -213,7 +191,6 @@
 <body>
   <canvas id="starCanvas"></canvas>
   <canvas id="textCanvas"></canvas>
-  <canvas id="profileCanvas"></canvas>
   <div class="page-content">
   <a href="index.html" class="back-link" data-ui="true">Back</a>
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
@@ -406,228 +383,6 @@
       textCanvas.height = window.innerHeight;
     }
     resizeText();
-
-    // ===== PROFILE PARTICLE CANVAS =====
-    const profileCanvas = document.getElementById('profileCanvas');
-    const profileCtx = profileCanvas.getContext('2d');
-    const profileParticles = [];
-    let profileAnimStart = 0;
-    const PROFILE_ANIM_DURATION = 2500; // ms
-    let mouseX = 0, mouseY = 0;
-    let profileRipples = [];
-
-    function resizeProfile() {
-      profileCanvas.width = window.innerWidth;
-      profileCanvas.height = window.innerHeight;
-    }
-    resizeProfile();
-
-    function loadProfileParticles() {
-      const photos = document.querySelectorAll('.profile-photo');
-      const loadPromises = [];
-
-      photos.forEach((photo, index) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-
-        const promise = new Promise((resolve) => {
-          img.onload = () => {
-            // Sample the image to create particles
-            const tempCanvas = document.createElement('canvas');
-            const size = 80; // Sample size
-            tempCanvas.width = size;
-            tempCanvas.height = size;
-            const ctx = tempCanvas.getContext('2d');
-
-            // Draw circular clip
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-            ctx.clip();
-            ctx.drawImage(img, 0, 0, size, size);
-
-            const imageData = ctx.getImageData(0, 0, size, size).data;
-            const particles = [];
-
-            // Sample pixels and create particles
-            for (let y = 0; y < size; y += 1) {
-              for (let x = 0; x < size; x += 1) {
-                const i = (y * size + x) * 4;
-                const r = imageData[i];
-                const g = imageData[i + 1];
-                const b = imageData[i + 2];
-                const a = imageData[i + 3];
-
-                if (a < 50) continue;
-
-                const brightness = (r + g + b) / 3;
-
-                // Higher sampling rate for more detail
-                if (Math.random() < (brightness / 255) * 0.6 + 0.15) {
-                  const nx = (x / size) - 0.5;
-                  const ny = (y / size) - 0.5;
-
-                  if (nx * nx + ny * ny > 0.25) continue;
-
-                  particles.push({
-                    tx: nx,
-                    ty: ny,
-                    sx: (Math.random() - 0.5) * 3 + nx,
-                    sy: (Math.random() - 0.5) * 3 + ny - 0.8,
-                    x: 0,
-                    y: 0,
-                    ox: 0, // offset from ripple
-                    oy: 0,
-                    brightness: brightness / 255,
-                    delay: Math.random() * 0.3,
-                    size: 0.4 + Math.random() * 0.6 // Smaller particles
-                  });
-                }
-              }
-            }
-
-            resolve({ photo, particles, index });
-          };
-          img.onerror = () => resolve(null);
-        });
-
-        loadPromises.push(promise);
-        img.src = photo.src;
-      });
-
-      Promise.all(loadPromises).then(results => {
-        results.forEach(result => {
-          if (result) {
-            profileParticles.push(result);
-          }
-        });
-        profileAnimStart = performance.now();
-      });
-    }
-
-    function easeOutCubic(t) {
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    function addProfileRipple(x, y) {
-      profileRipples.push({ x, y, age: 0, strength: 1 });
-      if (profileRipples.length > 5) profileRipples.shift();
-    }
-
-    // Track mouse for ripple effects
-    document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
-
-    // Add ripple on click
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('[data-ui]')) return;
-      addProfileRipple(e.clientX, e.clientY);
-    });
-
-    function renderProfileParticles(time) {
-      profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
-
-      if (profileParticles.length === 0) return;
-
-      const elapsed = time - profileAnimStart;
-      const globalProgress = Math.min(1, elapsed / PROFILE_ANIM_DURATION);
-
-      // Update ripples
-      profileRipples = profileRipples.filter(r => {
-        r.age += 0.016;
-        r.strength = Math.max(0, 1 - r.age * 0.8);
-        return r.strength > 0;
-      });
-
-      for (const { photo, particles } of profileParticles) {
-        const rect = photo.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const photoSize = rect.width - 12;
-        const photoRadius = photoSize / 2;
-
-        // Check if this photo is being held (for ripple hole effect)
-        const isThisHeld = currentMember &&
-          Math.abs(currentMember.centerX - centerX) < 5 &&
-          Math.abs(currentMember.centerY - centerY) < 5;
-        const holeRadius = isThisHeld ? holdStrength * photoRadius * 0.85 : 0;
-
-        for (const p of particles) {
-          // Animation progress
-          const particleProgress = Math.max(0, Math.min(1, (globalProgress - p.delay) / (1 - p.delay)));
-          const easedProgress = easeOutCubic(particleProgress);
-
-          // Base position (interpolate during intro, then stay at target)
-          const baseX = p.sx + (p.tx - p.sx) * easedProgress;
-          const baseY = p.sy + (p.ty - p.sy) * easedProgress;
-
-          // Screen coordinates
-          let screenX = centerX + baseX * photoSize;
-          let screenY = centerY + baseY * photoSize;
-
-          // Apply ripple hole effect - push particles outward from center
-          if (holeRadius > 0) {
-            const dx = screenX - centerX;
-            const dy = screenY - centerY;
-            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
-            if (distFromCenter < holeRadius && distFromCenter > 0) {
-              // Push particle to edge of hole
-              const pushDist = (holeRadius - distFromCenter) * 1.2;
-              const angle = Math.atan2(dy, dx);
-              screenX += Math.cos(angle) * pushDist;
-              screenY += Math.sin(angle) * pushDist;
-            }
-          }
-
-          // Apply ripple effects from clicks
-          for (const ripple of profileRipples) {
-            const dx = screenX - ripple.x;
-            const dy = screenY - ripple.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const wavePos = ripple.age * 200;
-            const waveDist = Math.abs(dist - wavePos);
-            if (waveDist < 40) {
-              const waveStrength = (1 - waveDist / 40) * ripple.strength * 8;
-              const angle = Math.atan2(dy, dx);
-              screenX += Math.cos(angle) * waveStrength;
-              screenY += Math.sin(angle) * waveStrength;
-            }
-          }
-
-          // Mouse proximity ripple (subtle hover effect)
-          const mouseDx = screenX - mouseX;
-          const mouseDy = screenY - mouseY;
-          const mouseDist = Math.sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
-          if (mouseDist < 50 && mouseDist > 0) {
-            const pushStrength = (1 - mouseDist / 50) * 4;
-            const angle = Math.atan2(mouseDy, mouseDx);
-            screenX += Math.cos(angle) * pushStrength;
-            screenY += Math.sin(angle) * pushStrength;
-          }
-
-          // Alpha - fade particles in hole area
-          let alpha = Math.min(1, particleProgress * 1.5) * p.brightness;
-          if (holeRadius > 0) {
-            const dx = screenX - centerX;
-            const dy = screenY - centerY;
-            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
-            if (distFromCenter < holeRadius * 0.7) {
-              alpha *= 0.15; // Fade particles inside hole
-            }
-          }
-
-          // Draw particle
-          profileCtx.beginPath();
-          profileCtx.arc(screenX, screenY, p.size, 0, Math.PI * 2);
-          profileCtx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(3)})`;
-          profileCtx.fill();
-        }
-      }
-    }
-
-    // Start loading after DOM is ready
-    setTimeout(loadProfileParticles, 100);
 
     // ===== AUDIO =====
     let audioEnabled = false;
@@ -900,10 +655,7 @@
       // Render warp stars
       renderStars(dt);
 
-      // Render profile particles
-      renderProfileParticles(time);
-
-      // Render text particles
+      // Render text particles (hobby words)
       renderTextParticles(time);
 
       requestAnimationFrame(render);
@@ -914,7 +666,6 @@
       resizeStars();
       initStars();
       resizeText();
-      resizeProfile();
       getTeamMembers();
     });
 
