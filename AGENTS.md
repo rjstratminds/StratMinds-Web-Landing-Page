@@ -46,10 +46,10 @@
 - **Advisory Partners**: Mike Mortensen, Arnold Liwanag
 - **Profile photos**: Circular B&W photos in `public/media/team/`
 - **Hover effect**: Green border (#3be28c) + 5% zoom on hover
-- **LinkedIn links**: Clicking profile photo opens LinkedIn in new tab
-- **Warp stars**: Stars move toward viewer from center (matching main page hyperspace aesthetic)
+- **LinkedIn links**: Quick click (<200ms) on profile photo opens LinkedIn in new tab
+- **Warp stars**: Stars move toward viewer from center (60% slower than main page)
 - **Hold-to-reveal hobbies**: Hold on profile photo reveals hobby word as green particle text
-  - Richard: Surfing, Anton: Zen, Summer: Media, Arie: Gardening, Mike: Baby, Arnold: Surfing
+  - Richard: Surfing, Anton: Zen, Summer: Pilates, Arie: Gardening, Mike: Baby, Arnold: Surfing
 - **Audio**: Background music + whoosh sound effect on hold (when Sound On)
 - **"Our Team" link**: Added centered below metrics grid on index.html (green, bold, title case)
 
@@ -64,16 +64,10 @@
 - Updated to black/white PNG version (`favicon.png`)
 - Used for both standard favicon and Apple touch icon
 
-### Hidden Text Interactive LinkedIn Links
-- **Hidden Text**: Displays team names (Richard Jhang, Anton Borzov, Summer Kim, Arie Fisher) in 4 columns when holding/pressing on logo area.
-- **Two-step interaction**: Hold to reveal names, then click/tap on a name to open LinkedIn (prevents accidental navigation).
-- **Ripple behavior**: Fixed ripple staying open after maximizing hold duration.
-- **Hit Detection**: Uses computed bounds from actual particle positions, converted to screen coordinates with 10px buffer and 40px vertical offset.
-- **LinkedIn URLs**:
-  - Richard Jhang → linkedin.com/in/richardjhang/
-  - Anton Borzov → linkedin.com/in/tyggy/
-  - Summer Kim → linkedin.com/in/skim725/
-  - Arie Fisher → linkedin.com/in/ariefisher/
+### Hidden Text on Logo
+- **Hidden Text**: Hold on logo area reveals "AI for Good" (centered green particle text)
+- **Ripple behavior**: Hole opens on hold, closes gradually (~1.7s) in sync with closing whoosh sound
+- **Essay link**: If held to full reveal and released while cursor is on the text, opens Dario Amodei's "Machines of Loving Grace" essay (https://www.darioamodei.com/essay/machines-of-loving-grace)
 
 ### Contact Strip
 - Changed from emoji icons to text links: `email.` `linkedIn.` `portal.`
@@ -129,6 +123,19 @@
 - Sound toggle controls background ambience.
 - Warp toggle + Sound ON triggers hyperspace SFX when the yellow/green cue hits center.
 - Ripple whoosh only plays when Sound ON and click is inside the logo bounds.
+- **Sound state persists**: Sound ON/OFF saved to localStorage, persists when navigating between pages.
+
+### Audio Manifest
+Background music is loaded from `media/audio/manifest.json`:
+```json
+{
+  "index": ["index Liquid Memoirs - Letting Go.mp3"],
+  "stratminds-team": ["stratminds-team Tungsten Stars - Returning Home.mp3"]
+}
+```
+- Each page reads from its own array of tracks
+- Randomly selects one track per visit (if multiple available)
+- To add music: edit manifest.json, drop mp3 into `media/audio/`, no code changes needed
 
 ## Hosting / Deploy
 - Firebase Hosting project: `stratminds-ai-bot`

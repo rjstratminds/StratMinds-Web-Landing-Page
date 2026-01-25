@@ -1595,6 +1595,15 @@
       isHolding = false;
       addRipple(e.clientX, e.clientY);
 
+      // If fully revealed (held long enough) and cursor is in logo area, open essay
+      const inLogoArea = isInLogoRect(e.clientX, e.clientY) ||
+        (e.clientY < window.innerHeight * 0.5 &&
+         e.clientX > window.innerWidth * 0.25 &&
+         e.clientX < window.innerWidth * 0.75);
+      if (holdReleaseStrength >= 0.9 && inLogoArea) {
+        window.open('https://www.darioamodei.com/essay/machines-of-loving-grace', '_blank');
+      }
+
       // Always release - fade out gradually with closing sound
       holdReleaseTime = now;
     }, { passive: true });
