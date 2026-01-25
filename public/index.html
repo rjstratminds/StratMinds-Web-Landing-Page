@@ -1718,6 +1718,7 @@
       soundToggle.textContent = 'Sound Off';
       soundToggle.addEventListener('click', () => {
         audioEnabled = !audioEnabled;
+        localStorage.setItem('soundEnabled', audioEnabled ? '1' : '0');
         if (audioEnabled) {
           bgAudio.currentTime = 0;
           bgAudio.play().catch(() => {});
