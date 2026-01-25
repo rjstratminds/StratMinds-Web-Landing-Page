@@ -47,7 +47,10 @@
 - **Profile photos**: Circular B&W photos in `public/media/team/`
 - **Hover effect**: Green border (#3be28c) + 5% zoom on hover
 - **LinkedIn links**: Clicking profile photo opens LinkedIn in new tab
-- **Starry background**: Animated twinkling stars matching index.html aesthetic
+- **Warp stars**: Stars move toward viewer from center (matching main page hyperspace aesthetic)
+- **Hold-to-reveal hobbies**: Hold on profile photo reveals hobby word as green particle text
+  - Richard: Surfing, Anton: Zen, Summer: Media, Arie: Gardening, Mike: Baby, Arnold: Surfing
+- **Audio**: Background music + whoosh sound effect on hold (when Sound On)
 - **"Our Team" link**: Added centered below metrics grid on index.html (green, bold, title case)
 
 ### Button Hover Effects
