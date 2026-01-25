@@ -22,18 +22,21 @@
       color: var(--ink);
       overflow-x: hidden;
     }
-    #starCanvas {
+    #glCanvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       z-index: 0;
-      pointer-events: none;
     }
     .page-content {
       position: relative;
       z-index: 1;
+      pointer-events: none;
+    }
+    .page-content a, .page-content button {
+      pointer-events: auto;
     }
     .back-link {
       position: fixed;
@@ -51,6 +54,25 @@
       transition: color 180ms ease, border-color 180ms ease;
     }
     .back-link:hover {
+      color: #3be28c;
+      border-color: #3be28c;
+    }
+    .sound-toggle {
+      position: fixed;
+      right: 4vw;
+      top: 3vh;
+      z-index: 10;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--soft);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: color 180ms ease, border-color 180ms ease;
+    }
+    .sound-toggle:hover {
       color: #3be28c;
       border-color: #3be28c;
     }
@@ -94,6 +116,7 @@
       position: relative;
       max-width: 220px;
       margin: 0 auto;
+      pointer-events: auto;
     }
     .profile-link {
       display: block;
@@ -101,6 +124,7 @@
       max-width: 180px;
       margin: 0 auto 16px;
       text-decoration: none;
+      position: relative;
     }
     .profile-photo {
       width: 100%;
@@ -147,7 +171,6 @@
       font-size: 12px;
       color: rgba(255, 255, 255, 0.45);
       padding: 6vh 6vw 4vh;
-      letter-spacing: 0.02em;
     }
     @media (max-width: 540px) {
       .team-grid, .team-grid.advisory {
@@ -158,9 +181,10 @@
   </style>
 </head>
 <body>
-  <canvas id="starCanvas"></canvas>
+  <canvas id="glCanvas"></canvas>
   <div class="page-content">
-  <a href="index.html" class="back-link">Back</a>
+  <a href="index.html" class="back-link" data-ui="true">Back</a>
+  <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
 
   <header class="page-header">
     <h1><span>The Minds</span> of StratMinds</h1>
@@ -169,7 +193,7 @@
   <section class="team-section">
     <h2 class="section-title">Lead Partners</h2>
     <div class="team-grid">
-      <div class="team-member">
+      <div class="team-member" data-hobby="Surfing">
         <a href="https://www.linkedin.com/in/richardjhang/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/richard-jhang.png" alt="Richard Jhang" class="profile-photo" />
         </a>
@@ -178,7 +202,7 @@
         <p class="member-bio">Seasoned technologist, advisor, and investor in a number of start-ups, funds, and Fortune 500 enterprises. Ex Chief Innovation Officer & Leader of Applied AI @IBM. Led Technology/Strategy at @PwC and @Strategy&. Seasoned VC/angel. CFA.</p>
         <p class="member-expertise">Expert in AI, corp strategy, innovation and deal / fund structures</p>
       </div>
-      <div class="team-member">
+      <div class="team-member" data-hobby="Zen">
         <a href="https://www.linkedin.com/in/tyggy/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/anton-borzov.png" alt="Anton Borzov" class="profile-photo" />
         </a>
@@ -187,7 +211,7 @@
         <p class="member-bio">First product designer/leader at @WhatsApp and @Neeva. Added over 1.8 billion users in his career. 15+ years of building and supporting global design teams. 25 years in UX, product, and design. Prolific angel investor. M.Sc.</p>
         <p class="member-expertise">Expert in AI apps / SaaS, product design, UX, 0-to-1 scale-up</p>
       </div>
-      <div class="team-member">
+      <div class="team-member" data-hobby="Media">
         <a href="https://www.linkedin.com/in/skim725/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/summer-kim.png" alt="Summer Kim" class="profile-photo" />
         </a>
@@ -196,7 +220,7 @@
         <p class="member-bio">Founded/led global UX research functions at @WhatsApp/Meta, @Roblox, @Google Comms. Lead researcher at @Microsoft Surface, @Motorola. Advisor to global tech startups. Added over 1.7 billion users in her career. Active investor/advisor. M.Sc.</p>
         <p class="member-expertise">Expert in AI apps, product UX, user research, 'next billion users' scale-up</p>
       </div>
-      <div class="team-member">
+      <div class="team-member" data-hobby="Gardening">
         <a href="https://www.linkedin.com/in/ariefisher/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/arie-fisher.png" alt="Arie Fisher" class="profile-photo" />
         </a>
@@ -211,7 +235,7 @@
   <section class="team-section">
     <h2 class="section-title">Advisory Partners</h2>
     <div class="team-grid advisory">
-      <div class="team-member">
+      <div class="team-member" data-hobby="Baby">
         <a href="https://www.linkedin.com/in/mikemortensen1/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/mike-mortensen.png" alt="Mike Mortensen" class="profile-photo" />
         </a>
@@ -219,7 +243,7 @@
         <div class="member-role">Next Gen AI<br>+Strategy</div>
         <p class="member-bio">Technologist, advisor, and investor with ground-truth knowledge for how to successfully deploy Enterprise AI. Consultant @McKinsey and @IBM. Startup leader from Series A @ArenaAI to IPO @Agora. Stanford MBA.</p>
       </div>
-      <div class="team-member">
+      <div class="team-member" data-hobby="Surfing">
         <a href="https://www.linkedin.com/in/arnoldliwanag/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/arnold-liwanag.png" alt="Arnold Liwanag" class="profile-photo" />
         </a>
@@ -236,50 +260,528 @@
   </div>
 
   <script>
-    const canvas = document.getElementById('starCanvas');
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    const starCount = 200;
+    const canvas = document.getElementById('glCanvas');
+    const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initStars();
+    if (!gl) {
+      document.body.style.background = '#000';
+      throw new Error('WebGL2 not supported');
     }
 
-    function initStars() {
-      stars = [];
+    // Audio state
+    let audioEnabled = false;
+    let whooshCtx = null;
+    let whooshGain = null;
+    let whooshBuffer = null;
+    let whooshBufferRev = null;
+    let whooshLoading = false;
+
+    const soundToggle = document.getElementById('soundToggle');
+    soundToggle.addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      soundToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
+      if (audioEnabled) initWhoosh();
+    });
+
+    function initWhoosh() {
+      if (whooshCtx) return;
+      whooshCtx = new (window.AudioContext || window.webkitAudioContext)();
+      whooshGain = whooshCtx.createGain();
+      whooshGain.gain.value = 1.0;
+      whooshGain.connect(whooshCtx.destination);
+      loadWhooshBuffer();
+    }
+
+    function loadWhooshBuffer() {
+      if (whooshBuffer || whooshLoading || !whooshCtx) return;
+      whooshLoading = true;
+      const url = 'media/audio/Alien take off whoosh.mp3';
+      fetch(url)
+        .then(res => res.arrayBuffer())
+        .then(buf => whooshCtx.decodeAudioData(buf))
+        .then(decoded => {
+          whooshBuffer = decoded;
+          const rev = whooshCtx.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
+          for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+            const src = decoded.getChannelData(ch);
+            const dst = rev.getChannelData(ch);
+            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) {
+              dst[i] = src[j];
+            }
+          }
+          whooshBufferRev = rev;
+          whooshLoading = false;
+        })
+        .catch(() => { whooshLoading = false; });
+    }
+
+    function playWhoosh(reverse = false) {
+      if (!audioEnabled || !whooshCtx || !whooshBuffer) return;
+      if (whooshCtx.state === 'suspended') whooshCtx.resume();
+      const buffer = reverse ? whooshBufferRev : whooshBuffer;
+      if (!buffer) return;
+      const src = whooshCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(whooshGain);
+      src.start();
+    }
+
+    // WebGL shaders
+    const vertexSrc = `#version 300 es
+    precision highp float;
+    const int MAX_RIPPLES = 8;
+    layout(location = 0) in vec3 aPosition;
+    layout(location = 1) in float aSeed;
+    layout(location = 2) in float aTone;
+    layout(location = 3) in float aLayer;
+
+    uniform float uTime;
+    uniform vec2 uMouse;
+    uniform float uMouseStrength;
+    uniform vec2 uHoldPos;
+    uniform float uHoldStrength;
+    uniform float uHoleRadius;
+    uniform vec2 uRipples[MAX_RIPPLES];
+    uniform float uRippleAges[MAX_RIPPLES];
+    uniform float uPixelRatio;
+
+    out float vTone;
+    out float vLayer;
+    out float vHole;
+
+    float hash(float n) { return fract(sin(n) * 43758.5453123); }
+
+    void main() {
+      vec3 pos = aPosition;
+      float isText = aLayer;
+
+      // Stars drift slowly
+      if (isText < 0.5) {
+        pos.x += sin(uTime * 0.08 + aSeed * 17.0) * 0.003;
+        pos.y += cos(uTime * 0.06 + aSeed * 13.0) * 0.003;
+      }
+
+      // Mouse hover ripple (stars only)
+      if (isText < 0.5) {
+        vec2 m = uMouse * 2.0 - 1.0;
+        float md = distance(pos.xy, m);
+        float hoverWave = sin(md * 18.0 - uTime * 6.0) * exp(-md * 3.0);
+        vec2 hoverDir = normalize(pos.xy - m + 0.0001);
+        pos.xy += hoverDir * hoverWave * 0.04 * uMouseStrength;
+      }
+
+      // Click ripples (stars only)
+      if (isText < 0.5) {
+        for (int i = 0; i < MAX_RIPPLES; i++) {
+          float age = uRippleAges[i];
+          if (age >= 0.0) {
+            float d = distance(pos.xy, uRipples[i]);
+            float wave = sin(d * 20.0 - age * 8.0);
+            float amp = exp(-d * 2.0) * exp(-age * 1.2);
+            vec2 dir = normalize(pos.xy - uRipples[i] + 0.0001);
+            pos.xy += dir * wave * amp * 0.06;
+          }
+        }
+      }
+
+      // Hold effect - push stars away, reveal text
+      float holdDist = distance(pos.xy, uHoldPos);
+      float holdWave = sin(holdDist * 16.0 - uTime * 8.0) * exp(-holdDist * 2.0);
+      vec2 holdDir = normalize(pos.xy - uHoldPos + 0.0001);
+
+      if (isText < 0.5) {
+        // Stars get pushed away
+        pos.xy += holdDir * holdWave * 0.1 * uHoldStrength;
+        pos.xy += holdDir * exp(-holdDist * 1.5) * uHoldStrength * 0.3;
+      }
+
+      // Hole mask for stars
+      float safeRadius = max(uHoleRadius, 0.001);
+      float holeMask = (1.0 - smoothstep(safeRadius * 0.6, safeRadius, holdDist)) * step(0.001, uHoleRadius);
+
+      gl_Position = vec4(pos.xy, 0.0, 1.0);
+
+      float baseSize = isText > 0.5 ? 1.8 : (0.8 + aTone * 1.2);
+      gl_PointSize = baseSize * uPixelRatio;
+
+      vTone = aTone;
+      vLayer = isText;
+      vHole = holeMask;
+    }
+    `;
+
+    const fragmentSrc = `#version 300 es
+    precision highp float;
+    in float vTone;
+    in float vLayer;
+    in float vHole;
+    uniform float uHoldStrength;
+    out vec4 outColor;
+
+    void main() {
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+
+      float isText = vLayer;
+
+      // Stars: soft glow
+      float starCore = smoothstep(0.5, 0.0, d);
+      float starAlpha = starCore * vTone * 0.7;
+
+      // Text: sharp particles
+      float textCore = smoothstep(0.15, 0.0, d);
+      float textAlpha = textCore * uHoldStrength;
+
+      // Star color (white)
+      vec3 starColor = vec3(vTone * 0.9);
+      // Text color (green)
+      vec3 textColor = vec3(0.23, 0.89, 0.55);
+
+      vec3 finalColor = mix(starColor, textColor, isText);
+      float finalAlpha = mix(starAlpha * (1.0 - vHole), textAlpha * vHole, isText);
+
+      outColor = vec4(finalColor, finalAlpha);
+    }
+    `;
+
+    function createShader(type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    function createProgram(vsSrc, fsSrc) {
+      const vs = createShader(gl.VERTEX_SHADER, vsSrc);
+      const fs = createShader(gl.FRAGMENT_SHADER, fsSrc);
+      const program = gl.createProgram();
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error(gl.getProgramInfoLog(program));
+        return null;
+      }
+      return program;
+    }
+
+    const program = createProgram(vertexSrc, fragmentSrc);
+    gl.useProgram(program);
+
+    const MAX_RIPPLES = 8;
+    const uniforms = {
+      time: gl.getUniformLocation(program, 'uTime'),
+      mouse: gl.getUniformLocation(program, 'uMouse'),
+      mouseStrength: gl.getUniformLocation(program, 'uMouseStrength'),
+      holdPos: gl.getUniformLocation(program, 'uHoldPos'),
+      holdStrength: gl.getUniformLocation(program, 'uHoldStrength'),
+      holeRadius: gl.getUniformLocation(program, 'uHoleRadius'),
+      ripples: gl.getUniformLocation(program, 'uRipples[0]'),
+      rippleAges: gl.getUniformLocation(program, 'uRippleAges[0]'),
+      pixelRatio: gl.getUniformLocation(program, 'uPixelRatio')
+    };
+
+    // Ripple state
+    const rippleLife = 2.0;
+    const ripples = [];
+    const ripplePositions = new Float32Array(MAX_RIPPLES * 2);
+    const rippleAges = new Float32Array(MAX_RIPPLES);
+
+    function addRipple(clientX, clientY) {
+      const x = (clientX / window.innerWidth) * 2 - 1;
+      const y = 1 - (clientY / window.innerHeight) * 2;
+      ripples.push({ x, y, age: 0 });
+      if (ripples.length > MAX_RIPPLES) ripples.shift();
+    }
+
+    // Build text points for a single word
+    function buildTextPoints(word, centerX, centerY, options = {}) {
+      const c = document.createElement('canvas');
+      const size = options.size || 200;
+      c.width = size * 3;
+      c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `${options.weight || 800} ${size * 0.5}px ${options.font || 'Arial Black, Arial'}`;
+      ctx.fillText(word, c.width / 2, c.height / 2);
+
+      const data = ctx.getImageData(0, 0, c.width, c.height).data;
+      const points = [];
+      const step = options.step || 2;
+      const scale = options.scale || 0.15;
+
+      for (let y = 0; y < c.height; y += step) {
+        for (let x = 0; x < c.width; x += step) {
+          const idx = (y * c.width + x) * 4;
+          if (data[idx] > 30) {
+            const nx = centerX + ((x / c.width) - 0.5) * scale * 2;
+            const ny = centerY + (0.5 - (y / c.height)) * scale * 0.67;
+            points.push({ x: nx, y: ny });
+          }
+        }
+      }
+      return points;
+    }
+
+    // Team members with hobbies and positions
+    const teamMembers = [];
+    let particleData = null;
+    let vao = null;
+
+    function getTeamMemberPositions() {
+      teamMembers.length = 0;
+      document.querySelectorAll('.team-member').forEach(el => {
+        const hobby = el.dataset.hobby;
+        const photo = el.querySelector('.profile-photo');
+        if (hobby && photo) {
+          const rect = photo.getBoundingClientRect();
+          const cx = (rect.left + rect.width / 2) / window.innerWidth * 2 - 1;
+          const cy = 1 - (rect.top + rect.height / 2) / window.innerHeight * 2;
+          const radius = (rect.width / 2) / window.innerWidth;
+          teamMembers.push({ hobby, cx, cy, radius, rect });
+        }
+      });
+    }
+
+    function initParticles() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+
+      getTeamMemberPositions();
+
+      // Create stars
+      const starCount = 400;
+      const positions = [];
+      const seeds = [];
+      const tones = [];
+      const layers = [];
+
       for (let i = 0; i < starCount; i++) {
-        stars.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 1.5 + 0.5,
-          alpha: Math.random() * 0.5 + 0.1,
-          speed: Math.random() * 0.3 + 0.1,
-          phase: Math.random() * Math.PI * 2
-        });
+        positions.push((Math.random() * 2 - 1), (Math.random() * 2 - 1), 0);
+        seeds.push(Math.random());
+        tones.push(0.3 + Math.random() * 0.7);
+        layers.push(0); // 0 = star
       }
+
+      // Create text particles for each team member
+      teamMembers.forEach(member => {
+        const pts = buildTextPoints(member.hobby, member.cx, member.cy, {
+          size: 180,
+          step: 2,
+          scale: member.radius * 2.2,
+          weight: 900
+        });
+        const multiplier = 8;
+        for (let i = 0; i < pts.length * multiplier; i++) {
+          const p = pts[Math.floor(Math.random() * pts.length)];
+          const jitter = 0.002;
+          positions.push(p.x + (Math.random() - 0.5) * jitter, p.y + (Math.random() - 0.5) * jitter, 0);
+          seeds.push(Math.random());
+          tones.push(0.8 + Math.random() * 0.2);
+          layers.push(1); // 1 = text
+        }
+      });
+
+      const positionArray = new Float32Array(positions);
+      const seedArray = new Float32Array(seeds);
+      const toneArray = new Float32Array(tones);
+      const layerArray = new Float32Array(layers);
+
+      if (vao) gl.deleteVertexArray(vao);
+      vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
+
+      const posBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, positionArray, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+      const seedBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, seedBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, seedArray, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(1);
+      gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
+
+      const toneBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, toneBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, toneArray, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(2);
+      gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
+
+      const layerBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, layerBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, layerArray, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(3);
+      gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 0, 0);
+
+      particleData = { count: positions.length / 3 };
     }
 
-    function render(time) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Interaction state
+    let mouseX = 0.5, mouseY = 0.5;
+    let mouseStrength = 0;
+    let isHolding = false;
+    let holdStart = 0;
+    let holdX = 0, holdY = 0;
+    let holdStrength = 0;
+    let holeRadius = 0;
+    let currentMember = null;
+    let whooshPlayed = false;
 
-      for (const star of stars) {
-        const flicker = 0.7 + 0.3 * Math.sin(time * 0.001 * star.speed + star.phase);
-        const alpha = star.alpha * flicker;
-
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.fill();
+    function getMemberAtPosition(clientX, clientY) {
+      for (const member of teamMembers) {
+        const rect = member.rect;
+        const dx = clientX - (rect.left + rect.width / 2);
+        const dy = clientY - (rect.top + rect.height / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < rect.width / 2) {
+          return member;
+        }
       }
+      return null;
+    }
+
+    window.addEventListener('pointermove', (e) => {
+      mouseX = e.clientX / window.innerWidth;
+      mouseY = 1 - e.clientY / window.innerHeight;
+      mouseStrength = 1.0;
+      if (isHolding) {
+        holdX = e.clientX;
+        holdY = e.clientY;
+      }
+    }, { passive: true });
+
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target && e.target.closest('[data-ui]')) return;
+
+      const member = getMemberAtPosition(e.clientX, e.clientY);
+      if (member) {
+        e.preventDefault();
+        currentMember = member;
+        isHolding = true;
+        holdStart = performance.now();
+        holdX = e.clientX;
+        holdY = e.clientY;
+        whooshPlayed = false;
+      }
+      addRipple(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (isHolding && whooshPlayed) {
+        playWhoosh(true);
+      }
+      isHolding = false;
+      currentMember = null;
+      whooshPlayed = false;
+      addRipple(e.clientX, e.clientY);
+    }, { passive: true });
+
+    // Prevent context menu on long press
+    window.addEventListener('contextmenu', (e) => {
+      if (getMemberAtPosition(e.clientX, e.clientY)) {
+        e.preventDefault();
+      }
+    });
+
+    // Render loop
+    let lastTime = 0;
+    function render(time) {
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+      if (!particleData) {
+        requestAnimationFrame(render);
+        return;
+      }
+
+      // Update hold strength
+      if (isHolding && currentMember) {
+        const elapsed = (performance.now() - holdStart) / 1000;
+        holdStrength = Math.min(1, elapsed / 0.6);
+        holeRadius = holdStrength * currentMember.radius * 1.2;
+
+        // Play whoosh when hold starts
+        if (!whooshPlayed && holdStrength > 0.1) {
+          playWhoosh(false);
+          whooshPlayed = true;
+        }
+      } else {
+        holdStrength *= 0.85;
+        holeRadius *= 0.85;
+        if (holdStrength < 0.01) holdStrength = 0;
+        if (holeRadius < 0.001) holeRadius = 0;
+      }
+
+      // Update ripples
+      ripplePositions.fill(-99);
+      rippleAges.fill(-1);
+      ripples.forEach((r, i) => {
+        r.age += dt;
+        if (r.age < rippleLife) {
+          ripplePositions[i * 2] = r.x;
+          ripplePositions[i * 2 + 1] = r.y;
+          rippleAges[i] = r.age;
+        }
+      });
+      while (ripples.length && ripples[0].age >= rippleLife) ripples.shift();
+
+      // Mouse strength decay
+      mouseStrength *= 0.96;
+
+      // Set uniforms
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      gl.uniform1f(uniforms.time, time / 1000);
+      gl.uniform2f(uniforms.mouse, mouseX, mouseY);
+      gl.uniform1f(uniforms.mouseStrength, mouseStrength);
+
+      const holdNdcX = currentMember ? currentMember.cx : (holdX / window.innerWidth * 2 - 1);
+      const holdNdcY = currentMember ? currentMember.cy : (1 - holdY / window.innerHeight * 2);
+      gl.uniform2f(uniforms.holdPos, holdNdcX, holdNdcY);
+      gl.uniform1f(uniforms.holdStrength, holdStrength);
+      gl.uniform1f(uniforms.holeRadius, holeRadius);
+      gl.uniform2fv(uniforms.ripples, ripplePositions);
+      gl.uniform1fv(uniforms.rippleAges, rippleAges);
+      gl.uniform1f(uniforms.pixelRatio, dpr);
+
+      gl.bindVertexArray(vao);
+      gl.drawArrays(gl.POINTS, 0, particleData.count);
 
       requestAnimationFrame(render);
     }
 
-    window.addEventListener('resize', resize);
-    resize();
-    requestAnimationFrame(render);
+    // Initialize
+    function init() {
+      initParticles();
+      requestAnimationFrame(render);
+    }
+
+    // Handle resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        initParticles();
+      }, 150);
+    });
+
+    // Start after a short delay to ensure layout is stable
+    setTimeout(init, 100);
   </script>
 </body>
 </html>
