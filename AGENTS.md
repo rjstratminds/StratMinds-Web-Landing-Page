@@ -16,15 +16,26 @@
 ### Team Page Layout Refinements
 - **2-column grid**: Lead Partners now display in 2 columns (was 4), max-width 600px
 - **Responsive simplification**: Removed 900px breakpoint (2-column is now default)
-- **Role text**: Summer's role now reads "Next Gen UX / +Tech Adoption" (line break)
+- **Role format**: All roles now two-line with "+..." on second line:
+  - Richard: Next Gen AI / +Computing
+  - Anton: Next Gen Product / +UX Design
+  - Summer: Next Gen UX / +Product Research
+  - Arie: Next Gen Computing / +Commerce
+  - Mike & Arnold: Next Gen AI / +Strategy
 - **Bio typos fixed**: "over a 1.8 billion" → "over 1.8 billion", added Oxford comma to Arnold's bio
-- **Role shortening**: Mike's role simplified to "Next Gen AI+Enterprise"
 
 ### "Our Team" Link Styling
 - Restyled from bold green text to pill/button style
 - Uppercase, 12px font, 0.2em letter-spacing
-- Transparent background with solid white border
+- Transparent background with subtle white border (matches Warp/Sound buttons)
+- Green triangle arrow (▶)
 - Hover: green text + green border
+
+### Scroll-Based Dimming
+- **Headings**: h2, h3, metric titles fade as they scroll towards top of screen
+- **Team link button**: Border, text, and green arrow fade towards top
+- **Green triangles**: Fade gradually from bottom (fully visible) to top (invisible)
+- Uses CSS `!important` for hover states to override JS scroll styling
 
 ### Favicon
 - Updated `favicon.jpg` (new version)
