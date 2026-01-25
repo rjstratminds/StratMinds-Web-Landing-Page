@@ -23,7 +23,7 @@
 ### "Our Team" Link Styling
 - Restyled from bold green text to pill/button style
 - Uppercase, 12px font, 0.2em letter-spacing
-- Transparent background with subtle white border
+- Transparent background with solid white border
 - Hover: green text + green border
 
 ### Favicon
