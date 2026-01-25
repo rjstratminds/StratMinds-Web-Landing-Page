@@ -547,6 +547,12 @@
         const photoSize = rect.width - 12;
         const photoRadius = photoSize / 2;
 
+        // Check if this photo is being held (for ripple hole effect)
+        const isThisHeld = currentMember &&
+          Math.abs(currentMember.centerX - centerX) < 5 &&
+          Math.abs(currentMember.centerY - centerY) < 5;
+        const holeRadius = isThisHeld ? holdStrength * photoRadius * 0.85 : 0;
+
         for (const p of particles) {
           // Animation progress
           const particleProgress = Math.max(0, Math.min(1, (globalProgress - p.delay) / (1 - p.delay)));
@@ -560,13 +566,26 @@
           let screenX = centerX + baseX * photoSize;
           let screenY = centerY + baseY * photoSize;
 
-          // Apply ripple effects
-          let rippleOffset = 0;
+          // Apply ripple hole effect - push particles outward from center
+          if (holeRadius > 0) {
+            const dx = screenX - centerX;
+            const dy = screenY - centerY;
+            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+            if (distFromCenter < holeRadius && distFromCenter > 0) {
+              // Push particle to edge of hole
+              const pushDist = (holeRadius - distFromCenter) * 1.2;
+              const angle = Math.atan2(dy, dx);
+              screenX += Math.cos(angle) * pushDist;
+              screenY += Math.sin(angle) * pushDist;
+            }
+          }
+
+          // Apply ripple effects from clicks
           for (const ripple of profileRipples) {
             const dx = screenX - ripple.x;
             const dy = screenY - ripple.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const wavePos = ripple.age * 200; // wave travels outward
+            const wavePos = ripple.age * 200;
             const waveDist = Math.abs(dist - wavePos);
             if (waveDist < 40) {
               const waveStrength = (1 - waveDist / 40) * ripple.strength * 8;
@@ -576,19 +595,27 @@
             }
           }
 
-          // Mouse proximity ripple (subtle)
+          // Mouse proximity ripple (subtle hover effect)
           const mouseDx = screenX - mouseX;
           const mouseDy = screenY - mouseY;
           const mouseDist = Math.sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
-          if (mouseDist < 60 && mouseDist > 0) {
-            const pushStrength = (1 - mouseDist / 60) * 3;
+          if (mouseDist < 50 && mouseDist > 0) {
+            const pushStrength = (1 - mouseDist / 50) * 4;
             const angle = Math.atan2(mouseDy, mouseDx);
             screenX += Math.cos(angle) * pushStrength;
             screenY += Math.sin(angle) * pushStrength;
           }
 
-          // Alpha
-          const alpha = Math.min(1, particleProgress * 1.5) * p.brightness;
+          // Alpha - fade particles in hole area
+          let alpha = Math.min(1, particleProgress * 1.5) * p.brightness;
+          if (holeRadius > 0) {
+            const dx = screenX - centerX;
+            const dy = screenY - centerY;
+            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+            if (distFromCenter < holeRadius * 0.7) {
+              alpha *= 0.15; // Fade particles inside hole
+            }
+          }
 
           // Draw particle
           profileCtx.beginPath();
@@ -699,38 +726,36 @@
 
     function generateTextParticles(word, rect) {
       const tempCanvas = document.createElement('canvas');
-      const size = 150;
-      tempCanvas.width = size * 3;
-      tempCanvas.height = size;
+      const size = 120;
+      tempCanvas.width = size * 2.5;
+      tempCanvas.height = size * 0.6;
       const ctx = tempCanvas.getContext('2d');
 
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '900 60px Arial Black, Arial';
+      ctx.font = '900 36px Arial Black, Arial';
       ctx.fillText(word, tempCanvas.width / 2, tempCanvas.height / 2);
 
       const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
       const particles = [];
-      const scale = rect.width * 1.2;
+      const scale = rect.width * 0.9;
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      for (let y = 0; y < tempCanvas.height; y += 2) {
-        for (let x = 0; x < tempCanvas.width; x += 2) {
-          if (imageData[(y * tempCanvas.width + x) * 4] > 50) {
+      // Higher density sampling for sharper text
+      for (let y = 0; y < tempCanvas.height; y += 1) {
+        for (let x = 0; x < tempCanvas.width; x += 1) {
+          if (imageData[(y * tempCanvas.width + x) * 4] > 100) {
             const px = centerX + ((x / tempCanvas.width) - 0.5) * scale;
-            const py = centerY + ((y / tempCanvas.height) - 0.5) * scale * 0.4;
-            // Add multiple particles for density
-            for (let i = 0; i < 4; i++) {
-              particles.push({
-                x: px + (Math.random() - 0.5) * 2,
-                y: py + (Math.random() - 0.5) * 2,
-                baseX: px,
-                baseY: py,
-                seed: Math.random()
-              });
-            }
+            const py = centerY + ((y / tempCanvas.height) - 0.5) * scale * 0.35;
+            particles.push({
+              x: px,
+              y: py,
+              baseX: px,
+              baseY: py,
+              seed: Math.random()
+            });
           }
         }
       }
@@ -742,7 +767,9 @@
     let holdStart = 0;
     let holdStrength = 0;
     let currentMember = null;
+    let currentMemberEl = null;
     let whooshPlayed = false;
+    let holdPrevented = false;
 
     function getMemberAt(x, y) {
       for (const m of teamMembers) {
@@ -753,27 +780,61 @@
       return null;
     }
 
+    function getProfileLinkAt(x, y) {
+      const el = document.elementFromPoint(x, y);
+      return el ? el.closest('.profile-link') : null;
+    }
+
     document.addEventListener('pointerdown', (e) => {
       if (e.target.closest('[data-ui]')) return;
 
-      // Update member positions before checking
       getTeamMembers();
-
       const m = getMemberAt(e.clientX, e.clientY);
       if (m) {
-        e.preventDefault();
         currentMember = m;
+        currentMemberEl = getProfileLinkAt(e.clientX, e.clientY);
         isHolding = true;
         holdStart = performance.now();
         whooshPlayed = false;
+        holdPrevented = false;
       }
     });
 
-    document.addEventListener('pointerup', () => {
-      if (isHolding && whooshPlayed) playWhoosh(true);
+    document.addEventListener('pointermove', (e) => {
+      if (!isHolding || !currentMember) return;
+      const holdDuration = performance.now() - holdStart;
+      // After 200ms of holding, prevent the click from navigating
+      if (holdDuration > 200 && !holdPrevented && currentMemberEl) {
+        holdPrevented = true;
+      }
+    });
+
+    document.addEventListener('pointerup', (e) => {
+      if (!isHolding) return;
+
+      const holdDuration = performance.now() - holdStart;
+
+      // If short click (< 200ms) and on a profile, navigate to LinkedIn
+      if (holdDuration < 200 && currentMemberEl) {
+        const href = currentMemberEl.getAttribute('href');
+        if (href) {
+          window.open(href, '_blank', 'noopener,noreferrer');
+        }
+      }
+
+      if (whooshPlayed) playWhoosh(true);
       isHolding = false;
       currentMember = null;
+      currentMemberEl = null;
       whooshPlayed = false;
+      holdPrevented = false;
+    });
+
+    // Prevent default link behavior - we handle it manually
+    document.querySelectorAll('.profile-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+      });
     });
 
     document.addEventListener('contextmenu', (e) => {
@@ -791,7 +852,7 @@
       const particles = member.particles;
       const cx = member.centerX;
       const cy = member.centerY;
-      const radius = member.radius * 1.2;
+      const radius = member.radius * 0.9;
 
       for (const p of particles) {
         const dx = p.baseX - cx;
@@ -801,21 +862,18 @@
         // Only show particles within the "hole" radius
         if (dist > radius) continue;
 
-        // Ripple wave effect
-        const wave = Math.sin(dist * 0.05 - time * 0.008) * 3 * holdStrength;
+        // Subtle wave effect
+        const wave = Math.sin(dist * 0.08 - time * 0.006) * 1.5 * holdStrength;
         const angle = Math.atan2(dy, dx);
         const px = p.baseX + Math.cos(angle) * wave;
         const py = p.baseY + Math.sin(angle) * wave;
 
-        // Micro drift
-        const drift = Math.sin(time * 0.003 + p.seed * 10) * 1.5;
+        // Alpha based on hold strength
+        const alpha = holdStrength * 0.95;
 
-        // Alpha based on hold strength and distance from center
-        const distRatio = dist / radius;
-        const alpha = holdStrength * (1 - distRatio * 0.5);
-
+        // Smaller, sharper particles
         textCtx.beginPath();
-        textCtx.arc(px + drift, py + drift * 0.5, 1.5, 0, Math.PI * 2);
+        textCtx.arc(px, py, 0.8, 0, Math.PI * 2);
         textCtx.fillStyle = `rgba(59, 226, 140, ${alpha.toFixed(3)})`;
         textCtx.fill();
       }
