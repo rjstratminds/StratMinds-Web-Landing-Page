@@ -30,15 +30,6 @@
       z-index: 0;
       pointer-events: none;
     }
-    #textCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      pointer-events: none;
-    }
     .page-content {
       position: relative;
       z-index: 2;
@@ -190,7 +181,6 @@
 </head>
 <body>
   <canvas id="starCanvas"></canvas>
-  <canvas id="textCanvas"></canvas>
   <div class="page-content">
   <a href="index.html" class="back-link" data-ui="true">Back</a>
   <button class="sound-toggle" id="soundToggle" data-ui="true">Sound Off</button>
@@ -202,7 +192,7 @@
   <section class="team-section">
     <h2 class="section-title">Lead Partners</h2>
     <div class="team-grid">
-      <div class="team-member" data-hobby="Surfing">
+      <div class="team-member">
         <a href="https://www.linkedin.com/in/richardjhang/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/richard-jhang.png" alt="Richard Jhang" class="profile-photo" />
         </a>
@@ -211,7 +201,7 @@
         <p class="member-bio">Seasoned technologist, advisor, and investor in a number of start-ups, funds, and Fortune 500 enterprises. Ex Chief Innovation Officer & Leader of Applied AI @IBM. Led Technology/Strategy at @PwC and @Strategy&. Seasoned VC/angel. CFA.</p>
         <p class="member-expertise">Expert in AI, corp strategy, innovation and deal / fund structures</p>
       </div>
-      <div class="team-member" data-hobby="Zen">
+      <div class="team-member">
         <a href="https://www.linkedin.com/in/tyggy/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/anton-borzov.png" alt="Anton Borzov" class="profile-photo" />
         </a>
@@ -220,7 +210,7 @@
         <p class="member-bio">First product designer/leader at @WhatsApp and @Neeva. Added over 1.8 billion users in his career. 15+ years of building and supporting global design teams. 25 years in UX, product, and design. Prolific angel investor. M.Sc.</p>
         <p class="member-expertise">Expert in AI apps / SaaS, product design, UX, 0-to-1 scale-up</p>
       </div>
-      <div class="team-member" data-hobby="Pilates">
+      <div class="team-member">
         <a href="https://www.linkedin.com/in/skim725/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/summer-kim.png" alt="Summer Kim" class="profile-photo" />
         </a>
@@ -229,7 +219,7 @@
         <p class="member-bio">Founded/led global UX research functions at @WhatsApp/Meta, @Roblox, @Google Comms. Lead researcher at @Microsoft Surface, @Motorola. Advisor to global tech startups. Added over 1.7 billion users in her career. Active investor/advisor. M.Sc.</p>
         <p class="member-expertise">Expert in AI apps, product UX, user research, 'next billion users' scale-up</p>
       </div>
-      <div class="team-member" data-hobby="Gardening">
+      <div class="team-member">
         <a href="https://www.linkedin.com/in/ariefisher/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/arie-fisher.png" alt="Arie Fisher" class="profile-photo" />
         </a>
@@ -244,7 +234,7 @@
   <section class="team-section">
     <h2 class="section-title">Advisory Partners</h2>
     <div class="team-grid advisory">
-      <div class="team-member" data-hobby="Baby">
+      <div class="team-member">
         <a href="https://www.linkedin.com/in/mikemortensen1/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/mike-mortensen.png" alt="Mike Mortensen" class="profile-photo" />
         </a>
@@ -252,7 +242,7 @@
         <div class="member-role">Next Gen AI<br>+Strategy</div>
         <p class="member-bio">Technologist, advisor, and investor with ground-truth knowledge for how to successfully deploy Enterprise AI. Consultant @McKinsey and @IBM. Startup leader from Series A @ArenaAI to IPO @Agora. Stanford MBA.</p>
       </div>
-      <div class="team-member" data-hobby="Surfing">
+      <div class="team-member">
         <a href="https://www.linkedin.com/in/arnoldliwanag/" target="_blank" rel="noopener noreferrer" class="profile-link">
           <img src="media/team/arnold-liwanag.png" alt="Arnold Liwanag" class="profile-photo" />
         </a>
@@ -374,16 +364,6 @@
     resizeStars();
     initStars();
 
-    // ===== TEXT CANVAS (for hidden hobby text) =====
-    const textCanvas = document.getElementById('textCanvas');
-    const textCtx = textCanvas.getContext('2d');
-
-    function resizeText() {
-      textCanvas.width = window.innerWidth;
-      textCanvas.height = window.innerHeight;
-    }
-    resizeText();
-
     // ===== AUDIO =====
     let audioEnabled = false;
     const bgAudio = new Audio();
@@ -402,10 +382,6 @@
       })
       .catch(() => {});
 
-    let whooshCtx = null;
-    let whooshBuffer = null;
-    let whooshBufferRev = null;
-
     const soundToggle = document.getElementById('soundToggle');
 
     // Check localStorage for sound state from main page
@@ -413,7 +389,6 @@
       audioEnabled = true;
       soundToggle.textContent = 'Sound On';
       bgAudio.play().catch(() => {});
-      initWhoosh();
     }
 
     soundToggle.addEventListener('click', () => {
@@ -422,242 +397,17 @@
       soundToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
       if (audioEnabled) {
         bgAudio.play().catch(() => {});
-        initWhoosh();
       } else {
         bgAudio.pause();
       }
     });
 
-    function initWhoosh() {
-      if (whooshCtx) return;
-      whooshCtx = new (window.AudioContext || window.webkitAudioContext)();
-      fetch('media/audio/Alien take off whoosh.mp3')
-        .then(r => r.arrayBuffer())
-        .then(buf => whooshCtx.decodeAudioData(buf))
-        .then(decoded => {
-          whooshBuffer = decoded;
-          const rev = whooshCtx.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
-          for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
-            const src = decoded.getChannelData(ch);
-            const dst = rev.getChannelData(ch);
-            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) dst[i] = src[j];
-          }
-          whooshBufferRev = rev;
-        });
-    }
-
-    function playWhoosh(reverse) {
-      if (!audioEnabled || !whooshCtx || !whooshBuffer) return;
-      if (whooshCtx.state === 'suspended') whooshCtx.resume();
-      const src = whooshCtx.createBufferSource();
-      src.buffer = reverse ? whooshBufferRev : whooshBuffer;
-      src.connect(whooshCtx.destination);
-      src.start();
-    }
-
-    // ===== TEAM MEMBERS & PARTICLES =====
-    const teamMembers = [];
-
-    function getTeamMembers() {
-      teamMembers.length = 0;
-      document.querySelectorAll('.team-member').forEach(el => {
-        const hobby = el.dataset.hobby;
-        const photo = el.querySelector('.profile-photo');
-        if (hobby && photo) {
-          const rect = photo.getBoundingClientRect();
-          // Generate text particles for this member
-          const particles = generateTextParticles(hobby, rect);
-          teamMembers.push({
-            hobby,
-            rect,
-            particles,
-            centerX: rect.left + rect.width / 2,
-            centerY: rect.top + rect.height / 2,
-            radius: rect.width / 2
-          });
-        }
-      });
-    }
-
-    function generateTextParticles(word, rect) {
-      const tempCanvas = document.createElement('canvas');
-      const size = 300; // 5x higher resolution
-      tempCanvas.width = size * 2;
-      tempCanvas.height = size * 0.5;
-      const ctx = tempCanvas.getContext('2d');
-
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = '400 72px Avenir, "Avenir Next", Arial, sans-serif'; // Not bold (400 weight)
-      ctx.fillText(word, tempCanvas.width / 2, tempCanvas.height / 2);
-
-      const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
-      const particles = [];
-      const scale = rect.width * 0.85;
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      // Very high density sampling for sharp text
-      for (let y = 0; y < tempCanvas.height; y += 1) {
-        for (let x = 0; x < tempCanvas.width; x += 1) {
-          if (imageData[(y * tempCanvas.width + x) * 4] > 120) {
-            const px = centerX + ((x / tempCanvas.width) - 0.5) * scale;
-            const py = centerY + ((y / tempCanvas.height) - 0.5) * scale * 0.28;
-            particles.push({
-              x: px,
-              y: py,
-              baseX: px,
-              baseY: py,
-              seed: Math.random()
-            });
-          }
-        }
-      }
-      return particles;
-    }
-
-    // ===== INTERACTION =====
-    let isHolding = false;
-    let holdStart = 0;
-    let holdStrength = 0;
-    let currentMember = null;
-    let currentMemberEl = null;
-    let whooshPlayed = false;
-    let holdPrevented = false;
-
-    function getMemberAt(x, y) {
-      for (const m of teamMembers) {
-        const dx = x - m.centerX;
-        const dy = y - m.centerY;
-        if (Math.sqrt(dx * dx + dy * dy) < m.radius) return m;
-      }
-      return null;
-    }
-
-    function getProfileLinkAt(x, y) {
-      const el = document.elementFromPoint(x, y);
-      return el ? el.closest('.profile-link') : null;
-    }
-
-    document.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('[data-ui]')) return;
-
-      getTeamMembers();
-      const m = getMemberAt(e.clientX, e.clientY);
-      if (m) {
-        currentMember = m;
-        currentMemberEl = getProfileLinkAt(e.clientX, e.clientY);
-        isHolding = true;
-        holdStart = performance.now();
-        whooshPlayed = false;
-        holdPrevented = false;
-      }
-    });
-
-    document.addEventListener('pointermove', (e) => {
-      if (!isHolding || !currentMember) return;
-      const holdDuration = performance.now() - holdStart;
-      // After 200ms of holding, prevent the click from navigating
-      if (holdDuration > 200 && !holdPrevented && currentMemberEl) {
-        holdPrevented = true;
-      }
-    });
-
-    document.addEventListener('pointerup', (e) => {
-      if (!isHolding) return;
-
-      const holdDuration = performance.now() - holdStart;
-
-      // If short click (< 200ms) and on a profile, navigate to LinkedIn
-      if (holdDuration < 200 && currentMemberEl) {
-        const href = currentMemberEl.getAttribute('href');
-        if (href) {
-          window.open(href, '_blank', 'noopener,noreferrer');
-        }
-      }
-
-      if (whooshPlayed) playWhoosh(true);
-      isHolding = false;
-      currentMember = null;
-      currentMemberEl = null;
-      whooshPlayed = false;
-      holdPrevented = false;
-    });
-
-    // Prevent default link behavior - we handle it manually
-    document.querySelectorAll('.profile-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-      });
-    });
-
-    document.addEventListener('contextmenu', (e) => {
-      getTeamMembers();
-      if (getMemberAt(e.clientX, e.clientY)) e.preventDefault();
-    });
-
     // ===== RENDER =====
-    function renderTextParticles(time) {
-      textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
-
-      if (!currentMember || holdStrength < 0.01) return;
-
-      const member = currentMember;
-      const particles = member.particles;
-      const cx = member.centerX;
-      const cy = member.centerY;
-      const radius = member.radius * 0.9;
-
-      for (const p of particles) {
-        const dx = p.baseX - cx;
-        const dy = p.baseY - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        // Only show particles within the "hole" radius
-        if (dist > radius) continue;
-
-        // Subtle wave effect
-        const wave = Math.sin(dist * 0.08 - time * 0.006) * 1.5 * holdStrength;
-        const angle = Math.atan2(dy, dx);
-        const px = p.baseX + Math.cos(angle) * wave;
-        const py = p.baseY + Math.sin(angle) * wave;
-
-        // Alpha based on hold strength
-        const alpha = holdStrength * 0.92;
-
-        // Very small particles for sharp text
-        textCtx.beginPath();
-        textCtx.arc(px, py, 0.45, 0, Math.PI * 2);
-        textCtx.fillStyle = `rgba(59, 226, 140, ${alpha.toFixed(3)})`;
-        textCtx.fill();
-      }
-    }
-
     let lastTime = 0;
     function render(time) {
-      const dt = (time - lastTime) / 1000; // Convert to seconds
+      const dt = (time - lastTime) / 1000;
       lastTime = time;
-
-      // Update hold strength
-      if (isHolding && currentMember) {
-        const elapsed = (performance.now() - holdStart) / 1000;
-        holdStrength = Math.min(1, elapsed / 0.4);
-        if (!whooshPlayed && holdStrength > 0.1) {
-          playWhoosh(false);
-          whooshPlayed = true;
-        }
-      } else {
-        holdStrength *= 0.9;
-        if (holdStrength < 0.01) holdStrength = 0;
-      }
-
-      // Render warp stars
       renderStars(dt);
-
-      // Render text particles (hobby words)
-      renderTextParticles(time);
-
       requestAnimationFrame(render);
     }
 
@@ -665,18 +415,9 @@
     window.addEventListener('resize', () => {
       resizeStars();
       initStars();
-      resizeText();
-      getTeamMembers();
     });
 
-    window.addEventListener('scroll', () => {
-      getTeamMembers();
-    });
-
-    setTimeout(() => {
-      getTeamMembers();
-      requestAnimationFrame(render);
-    }, 200);
+    requestAnimationFrame(render);
   </script>
 </body>
 </html>
