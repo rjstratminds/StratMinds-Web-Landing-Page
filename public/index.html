@@ -458,7 +458,18 @@
       padding: 8px 12px;
       transition: color 180ms ease, border-color 180ms ease;
     }
-    .team-link .arrow { color: #3be28c; }
+    .team-link .arrow {
+      display: inline-block;
+      width: 0.6em;
+      height: 0.6em;
+      margin-right: 0.3em;
+      vertical-align: middle;
+    }
+    .team-link .arrow svg {
+      width: 100%;
+      height: 100%;
+      fill: #3be28c;
+    }
     .team-link:hover {
       color: #3be28c !important;
       border-color: #3be28c !important;
@@ -506,7 +517,7 @@
           <div class="metric metric--primary"><span>Operator DNA</span><h3>2B+ Users</h3><p class="metric-body">Products built and scaled by our partner team.</p></div>
           <div class="metric"><span>Geo Edge</span><h3>San Francisco</h3><p class="metric-body">Embedded in the epicenter of AI capital, brains and startups.</p></div>
         </div>
-        <a href="stratminds-team.html" class="team-link"><span class="arrow">&#9654;&#xFE0E;</span> Our Team</a>
+        <a href="stratminds-team.html" class="team-link"><span class="arrow"><svg viewBox="0 0 10 10"><polygon points="0,0 10,5 0,10"/></svg></span>Our Team</a>
       </section>
       <section class="section">
         <h2>Dual Investment Thesis</h2>
@@ -2009,12 +2020,12 @@
         const borderAlpha = 0.02 + fadeTop * 0.10;
         teamLink.style.borderColor = `rgba(255, 255, 255, ${borderAlpha.toFixed(3)})`;
         teamLink.style.color = `rgba(255, 255, 255, ${(0.1 + fadeTop * 0.58).toFixed(3)})`;
-        const arrow = teamLink.querySelector('.arrow');
-        if (arrow) {
+        const arrowSvg = teamLink.querySelector('.arrow svg');
+        if (arrowSvg) {
           const g = Math.round(190 + fadeTop * 36);
           const r = Math.round(59 * fadeTop);
           const b = Math.round(140 * fadeTop);
-          arrow.style.color = `rgb(${r}, ${g}, ${b})`;
+          arrowSvg.style.fill = `rgb(${r}, ${g}, ${b})`;
         }
       }
 
