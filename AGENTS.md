@@ -1,5 +1,7 @@
 # StratMinds Landing - Project Notes
 
+> **Note:** `CLAUDE.md` is a symlink to this file. Edit either one - they are the same file.
+
 ## What Was Done
 - Built a WebGL/particle hero in `public/index.html` with ripple hole, hidden text, warp/hyperspace visuals, and scroll-aware typography/sections.
 - Added audio behavior:
