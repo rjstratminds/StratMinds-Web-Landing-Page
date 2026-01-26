@@ -28,7 +28,7 @@
 - Restyled from bold green text to pill/button style
 - Uppercase, 12px font, 0.2em letter-spacing
 - Transparent background with subtle white border (matches Warp/Sound buttons)
-- Green triangle arrow (▶)
+- Green triangle arrow (CSS border-based for consistent cross-device rendering)
 - Hover: green text + green border
 
 ### Scroll-Based Dimming
