@@ -138,13 +138,14 @@ Background music is loaded from `media/audio/manifest.json`:
 ## Hosting / Deploy
 - Firebase Hosting project: `stratminds-ai-bot`
 - Firebase config: `firebase.json` (public = `public/`, SPA rewrite to `/index.html`).
-- **Deploy command** (always use this):
-  ```bash
-  ./scripts/deploy.sh
-  ```
-  This script deploys to Firebase and automatically cleans up old releases (keeps last 2).
-- Live URL:
-  - https://stratminds-ai-bot.web.app
+
+**IMPORTANT: Always use the deploy script to deploy!**
+```bash
+./scripts/deploy.sh
+```
+This script deploys to Firebase AND automatically cleans up old releases (keeps last 2). Never use `firebase deploy` directly - it skips cleanup and storage will accumulate.
+
+- Live URL: https://stratminds-ai-bot.web.app
 
 ### Release Cleanup
 Firebase Hosting keeps all previous versions by default, consuming significant storage (~800MB per release with videos).
